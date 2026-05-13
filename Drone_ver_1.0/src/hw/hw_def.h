@@ -36,7 +36,7 @@
 
 #define HW_PWM3_CH4           0
 
-
+#define HW_SPI_MAX_CH         3
 #define DEF_HW_SPI_ICM20602   0
 #define DEF_HW_SPI_BNO080     1
 

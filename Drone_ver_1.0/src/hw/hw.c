@@ -14,7 +14,8 @@ void hwInit(void)
   uartInit();
   ledInit();
   spiInit();
-  timInit();
-  buzInit();
-
+ // timInit();
+ // buzInit();
+  spiOpen(DEF_SPI_ICM20602);
+  ICM20602_Init();
 }

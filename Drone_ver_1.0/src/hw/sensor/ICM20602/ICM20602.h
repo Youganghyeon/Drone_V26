@@ -34,8 +34,8 @@
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
-#define CHIP_SELECT(ICM20602)     HAL_GPIO_WritePin(ICM20602_SPI_CS_PORT, ICM20602_SPI_CS_PIN,RESET)
-#define CHIP_DESELECT(ICM20602)   HAL_GPIO_WritePin(ICM20602_SPI_CS_PORT, ICM20602_SPI_CS_PIN,SET)
+#define chipSelect(ICM20602)     HAL_GPIO_WritePin(ICM20602_SPI_CS_PORT, ICM20602_SPI_CS_PIN,RESET)
+#define chipDeselect(ICM20602)   HAL_GPIO_WritePin(ICM20602_SPI_CS_PORT, ICM20602_SPI_CS_PIN,SET)
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
@@ -136,11 +136,14 @@ typedef struct _ICM20602{
 typedef enum{
   IDLE = 0,
   Active,
-  AxisRaw,
+  DONE,
+} SPI_STATE;
+
+typedef enum{
+  AxisRaw   = 3,
   AxisGyroRaw,
   AxisAccRaw
 } ICM_STATE;
-
 /**
  * @brief ICM20602 structure definition.
  */
@@ -152,9 +155,8 @@ extern int gyro_x_offset, gyro_y_offset, gyro_z_offset;
  * @brief ICM20602 function prototype definition.
  */
 
-void ICM20602_GPIO_SPI_Initialization(void);
-bool ICM20602_Initialization(void);
-
+void     ICM20602_GpioInit(void);
+bool     ICM20602_Init(void);
 //void ICM20602_Get6AxisRawData(short* accel, short* gyro);
 //void ICM20602_Get3AxisGyroRawData(short* gyro);
 //void ICM20602_Get3AxisAccRawData(short* accel);
@@ -164,7 +166,6 @@ bool     ICM20602_DataReady(void);
 void     ICM20602_Read6AxisRawData(void);
 void     ICM20602_Read3AxisGyroRawData(void);
 void     ICM20602_Read3AxisAccRawData(void);
-
 void     parsing_6AxisRawData(short* accel, short* gyro);
 void     parsing_3AxisGyroRawData(short* gyro);
 void     parsing_Get3AxisAccRawyData(short* accel);

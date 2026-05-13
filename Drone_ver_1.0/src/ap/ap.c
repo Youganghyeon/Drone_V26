@@ -22,6 +22,7 @@ void apInit(void)
     timDeinit();
 }
 
+
 void apMain(void)
 {
   uint32_t premillis=0;
@@ -36,5 +37,7 @@ void apMain(void)
      // printf("hello \n");
       premillis=millis();
     }
+    ICM20602_Read(AxisGyroRaw);
+
   }
 }

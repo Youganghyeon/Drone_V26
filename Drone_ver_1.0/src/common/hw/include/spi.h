@@ -14,10 +14,14 @@
 
 #define DEF_SPI_ICM20602    DEF_HW_SPI_ICM20602
 #define DEF_SPI_BNO080      DEF_HW_SPI_BNO080
+#define MAX_SPI_CH          HW_SPI_MAX_CH
+
 void    spiInit(void);
 bool    spiOpen(uint8_t ch);
 bool    SPI_DMABytes(uint8_t ch, uint8_t *tx_data, uint8_t* rx_data, uint16_t length);
 bool    SPI_PollByte(uint8_t ch, uint8_t *tx_data, uint8_t* rx_data, uint16_t length);
+void    spiRxCallbackRegister(uint8_t ch, void (*func)(void));
+bool    IsSpiInit(uint8_t ch);
 #endif
 
 

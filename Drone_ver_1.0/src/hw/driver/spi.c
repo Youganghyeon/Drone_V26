@@ -18,35 +18,58 @@ DMA_HandleTypeDef hdma_spi2_tx;
 DMA_HandleTypeDef hdma_spi3_rx;
 DMA_HandleTypeDef hdma_spi3_tx;
 
+typedef struct{
+SPI_HandleTypeDef* spi_handle;
+DMA_HandleTypeDef* dma_tx;
+DMA_HandleTypeDef* dma_rx;
+bool isInit;
+bool isReceived;
+void (*txfunc)(void);
+void (*rxfunc)(void);
+
+}Spi_tbl_t;
+
+
+Spi_tbl_t spi_tbl[MAX_SPI_CH];
+
 
 void spiInit(void)
 {
+  for(int i=0; i<MAX_SPI_CH; i++)
+  {
+    spi_tbl[i].isInit = false;
+  }
 }
+
 
 bool spiOpen(uint8_t ch)
 {
   bool ret=false;
+  SPI_HandleTypeDef* p_spi_handle;
   switch(ch)
   {
     case DEF_SPI_ICM20602:
-      hspi1.Instance = SPI1;
-      hspi1.Init.Mode = SPI_MODE_MASTER;
-      hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-      hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
-      hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
-      hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
-      hspi1.Init.NSS = SPI_NSS_SOFT;
-      hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
-      hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
-      hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-      hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-      hspi1.Init.CRCPolynomial = 10;
+      __HAL_RCC_DMA2_CLK_ENABLE();
       HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
       HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
       HAL_NVIC_SetPriority(DMA2_Stream3_IRQn, 0, 0);
       HAL_NVIC_EnableIRQ(DMA2_Stream3_IRQn);
 
-      if (HAL_SPI_Init(&hspi1) != HAL_OK)
+      spi_tbl[ch].spi_handle = &hspi1;
+      p_spi_handle = spi_tbl[ch].spi_handle;
+      p_spi_handle->Instance = SPI1;
+      p_spi_handle->Init.Mode = SPI_MODE_MASTER;
+      p_spi_handle->Init.Direction = SPI_DIRECTION_2LINES;
+      p_spi_handle->Init.DataSize = SPI_DATASIZE_8BIT;
+      p_spi_handle->Init.CLKPolarity = SPI_POLARITY_HIGH;
+      p_spi_handle->Init.CLKPhase = SPI_PHASE_2EDGE;
+      p_spi_handle->Init.NSS = SPI_NSS_SOFT;
+      p_spi_handle->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+      p_spi_handle->Init.FirstBit = SPI_FIRSTBIT_MSB;
+      p_spi_handle->Init.TIMode = SPI_TIMODE_DISABLE;
+      p_spi_handle->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+      p_spi_handle->Init.CRCPolynomial = 10;
+      if (HAL_SPI_Init(p_spi_handle) != HAL_OK)
       {
         Error_Handler();
       }
@@ -56,18 +79,20 @@ bool spiOpen(uint8_t ch)
       }
       break;
     case DEF_SPI_BNO080:
-      hspi2.Instance = SPI2;
-      hspi2.Init.Mode = SPI_MODE_MASTER;
-      hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-      hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
-      hspi2.Init.CLKPolarity = SPI_POLARITY_HIGH;
-      hspi2.Init.CLKPhase = SPI_PHASE_2EDGE;
-      hspi2.Init.NSS = SPI_NSS_SOFT;
-      hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
-      hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
-      hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
-      hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-      hspi2.Init.CRCPolynomial = 10;
+      spi_tbl[ch].spi_handle = &hspi2;
+      p_spi_handle = spi_tbl[ch].spi_handle;
+      p_spi_handle->Instance = SPI2;
+      p_spi_handle->Init.Mode = SPI_MODE_MASTER;
+      p_spi_handle->Init.Direction = SPI_DIRECTION_2LINES;
+      p_spi_handle->Init.DataSize = SPI_DATASIZE_8BIT;
+      p_spi_handle->Init.CLKPolarity = SPI_POLARITY_HIGH;
+      p_spi_handle->Init.CLKPhase = SPI_PHASE_2EDGE;
+      p_spi_handle->Init.NSS = SPI_NSS_SOFT;
+      p_spi_handle->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+      p_spi_handle->Init.FirstBit = SPI_FIRSTBIT_MSB;
+      p_spi_handle->Init.TIMode = SPI_TIMODE_DISABLE;
+      p_spi_handle->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+      p_spi_handle->Init.CRCPolynomial = 10;
 
       HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 0, 0);
       HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
@@ -75,10 +100,9 @@ bool spiOpen(uint8_t ch)
       HAL_NVIC_SetPriority(DMA1_Stream4_IRQn, 0, 0);
       HAL_NVIC_EnableIRQ(DMA1_Stream4_IRQn);
 
-      if (HAL_SPI_Init(&hspi2) != HAL_OK)
+      if (HAL_SPI_Init(p_spi_handle) != HAL_OK)
       {
         Error_Handler();
-
       }
       else
       {
@@ -86,36 +110,37 @@ bool spiOpen(uint8_t ch)
       }
       break;
     default:
-      hspi3.Instance = SPI3;
-      hspi3.Init.Mode = SPI_MODE_MASTER;
-      hspi3.Init.Direction = SPI_DIRECTION_2LINES;
-      hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
-      hspi3.Init.CLKPolarity = SPI_POLARITY_HIGH;
-      hspi3.Init.CLKPhase = SPI_PHASE_2EDGE;
-      hspi3.Init.NSS = SPI_NSS_SOFT;
-      hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
-      hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
-      hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
-      hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-      hspi3.Init.CRCPolynomial = 10;
+      spi_tbl[ch].spi_handle = &hspi3;
+      p_spi_handle = spi_tbl[ch].spi_handle;
+      p_spi_handle->Instance = SPI3;
+      p_spi_handle->Init.Mode = SPI_MODE_MASTER;
+      p_spi_handle->Init.Direction = SPI_DIRECTION_2LINES;
+      p_spi_handle->Init.DataSize = SPI_DATASIZE_8BIT;
+      p_spi_handle->Init.CLKPolarity = SPI_POLARITY_HIGH;
+      p_spi_handle->Init.CLKPhase = SPI_PHASE_2EDGE;
+      p_spi_handle->Init.NSS = SPI_NSS_SOFT;
+      p_spi_handle->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+      p_spi_handle->Init.FirstBit = SPI_FIRSTBIT_MSB;
+      p_spi_handle->Init.TIMode = SPI_TIMODE_DISABLE;
+      p_spi_handle->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+      p_spi_handle->Init.CRCPolynomial = 10;
 
       HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
       HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
       HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 0, 0);
       HAL_NVIC_EnableIRQ(DMA1_Stream5_IRQn);
 
-      if (HAL_SPI_Init(&hspi3) != HAL_OK)
+      if (HAL_SPI_Init(p_spi_handle) != HAL_OK)
       {
        Error_Handler();
        }
       else
       {
        ret=true;
-
       }
       break;
   }
-
+  spi_tbl[ch].isInit = true;
   return ret;
 }
 
@@ -123,64 +148,53 @@ bool spiOpen(uint8_t ch)
 bool SPI_PollByte(uint8_t ch, uint8_t *tx_data, uint8_t* rx_data, uint16_t length)
 {
   bool ret=false;
-   switch(ch)
-   {
-     case DEF_SPI_ICM20602:
-     if(HAL_SPI_TransmitReceive(&hspi1, tx_data, rx_data, length,100) == HAL_OK)
-     {
-       ret=true;
-     }
-     break;
-
-     case DEF_SPI_BNO080:
-     if(HAL_SPI_TransmitReceive(&hspi2, tx_data, rx_data, length,100) == HAL_OK)
-     {
-       ret=true;
-     }
-     break;
-
-     default:
-     if(HAL_SPI_TransmitReceive(&hspi3, tx_data, rx_data, length,100) == HAL_OK)
-     {
-      ret=true;
-     }
-     break;
-   }
-   return ret;
+  HAL_StatusTypeDef status;
+  status=HAL_SPI_TransmitReceive(spi_tbl[ch].spi_handle, tx_data, rx_data, length, 100);
+  if(status == HAL_OK)
+  {
+    ret=true;
+  }
+  return ret;
 }
 
 
 bool SPI_DMABytes(uint8_t ch, uint8_t *tx_data, uint8_t* rx_data, uint16_t length)
 {
   bool ret=false;
-  switch(ch)
+  HAL_StatusTypeDef status;
+  status=HAL_SPI_TransmitReceive_DMA(spi_tbl[ch].spi_handle, tx_data, rx_data, length);
+  if(status == HAL_OK)
   {
-    case DEF_SPI_ICM20602:
-    if(HAL_SPI_TransmitReceive_DMA(&hspi1, tx_data, rx_data, length) == HAL_OK)
-    {
-      ret=true;
-    }
-    break;
-
-    case DEF_SPI_BNO080:
-    if(HAL_SPI_TransmitReceive_DMA(&hspi2, tx_data, rx_data, length) == HAL_OK)
-    {
-      ret=true;
-    }
-    break;
-
-    default:
-    if(HAL_SPI_TransmitReceive_DMA(&hspi3, tx_data, rx_data, length) == HAL_OK)
-    {
-     ret=true;
-    }
-    break;
+    ret=true;
   }
   return ret;
 }
 
+bool IsSpiInit(uint8_t ch)
+{
+  return spi_tbl[ch].isInit;
+}
 
+void spiRxCallbackRegister(uint8_t ch, void (*func)(void))
+{
+  if(func != NULL)
+  {
+    spi_tbl[ch].rxfunc = func;
+  }
+}
 
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+  /* Prevent unused argument(s) compilation warning */
+  for(int i=0; i<MAX_SPI_CH; i++)
+  {
+    if(spi_tbl[i].spi_handle == NULL) continue;
+    if(hspi->Instance == spi_tbl[i].spi_handle->Instance)
+    {
+      spi_tbl[i].rxfunc();
+    }
+  }
+}
 void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
 {
 

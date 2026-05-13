@@ -14,7 +14,7 @@
 #include "spi.h"
 #include "tim.h"
 #include "buzzer.h"
-
+#include "ICM20602/ICM20602.h"
 void hwInit(void);
 
 #endif /* SRC_HW_HW_H_ */
