@@ -12,7 +12,6 @@
 #include "def.h"
 
 
-
 #define _USE_HW_LED
 #define _USE_HW_UART
 #define _USE_HW_SPI
@@ -37,8 +36,8 @@
 #define HW_PWM3_CH4           0
 
 #define HW_SPI_MAX_CH         3
-#define DEF_HW_SPI_ICM20602   0
-#define DEF_HW_SPI_BNO080     1
-
+#define DEF_HW_ICM20602       0
+#define DEF_HW_BNO080         1
+#define DEF_HW_LPS22HH         2
 
 #endif /* SRC_HW_HW_DEF_H_ */

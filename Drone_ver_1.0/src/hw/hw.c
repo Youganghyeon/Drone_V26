@@ -16,6 +16,8 @@ void hwInit(void)
   spiInit();
  // timInit();
  // buzInit();
-  spiOpen(DEF_SPI_ICM20602);
+  spiOpen(DEF_HW_ICM20602);
+  spiOpen(DEF_HW_LPS22HH);
   ICM20602_Init();
+  LPS22HH_Init();
 }

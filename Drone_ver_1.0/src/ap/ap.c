@@ -8,6 +8,7 @@
 
 #include "ap.h"
 
+LPS22HH_tbl_t LPS22HH;
 
 void apInit(void)
 {
@@ -26,7 +27,7 @@ void apInit(void)
 void apMain(void)
 {
   uint32_t premillis=0;
-
+  LPS22HH_Flush(&LPS22HH);
   while(1)
   {
     if(millis()-premillis>=500)
@@ -37,7 +38,7 @@ void apMain(void)
      // printf("hello \n");
       premillis=millis();
     }
-    ICM20602_Read(AxisGyroRaw);
-
+    ICM20602_GetInfo(AxisGyroRaw);
+    LPS22HH_GetInfo(&LPS22HH,LPS22HH_GetPress);
   }
 }

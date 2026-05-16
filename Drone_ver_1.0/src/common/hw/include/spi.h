@@ -12,14 +12,22 @@
 
 #ifdef _USE_HW_SPI
 
-#define DEF_SPI_ICM20602    DEF_HW_SPI_ICM20602
-#define DEF_SPI_BNO080      DEF_HW_SPI_BNO080
 #define MAX_SPI_CH          HW_SPI_MAX_CH
+#define _DEF_SPI1           DEF_HW_ICM20602
+#define _DEF_SPI2           DEF_HW_BNO080
+#define _DEF_SPI3           DEF_HW_LPS22HH
+
+typedef enum{
+  IDLE = 0,
+  Active,
+  DONE,
+} SPI_DMA_STATE;
+
 
 void    spiInit(void);
 bool    spiOpen(uint8_t ch);
-bool    SPI_DMABytes(uint8_t ch, uint8_t *tx_data, uint8_t* rx_data, uint16_t length);
-bool    SPI_PollByte(uint8_t ch, uint8_t *tx_data, uint8_t* rx_data, uint16_t length);
+bool    SPI_SendReceive_DMA(uint8_t ch, uint8_t *tx_data, uint8_t* rx_data, uint16_t length);
+bool    SPI_SendReceive(uint8_t ch, uint8_t *tx_data, uint8_t* rx_data, uint16_t length);
 void    spiRxCallbackRegister(uint8_t ch, void (*func)(void));
 bool    IsSpiInit(uint8_t ch);
 #endif

@@ -13,6 +13,7 @@
 #include "stdint.h"
 #include "stdarg.h"
 #include "stdbool.h"
+#include "math.h"
 
 #define LED_1_Pin GPIO_PIN_0
 #define LED_1_GPIO_Port GPIOC

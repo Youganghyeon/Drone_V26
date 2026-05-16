@@ -48,7 +48,7 @@ bool spiOpen(uint8_t ch)
   SPI_HandleTypeDef* p_spi_handle;
   switch(ch)
   {
-    case DEF_SPI_ICM20602:
+    case _DEF_SPI1:
       __HAL_RCC_DMA2_CLK_ENABLE();
       HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
       HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
@@ -78,7 +78,7 @@ bool spiOpen(uint8_t ch)
         ret=true;
       }
       break;
-    case DEF_SPI_BNO080:
+    case _DEF_SPI2:
       spi_tbl[ch].spi_handle = &hspi2;
       p_spi_handle = spi_tbl[ch].spi_handle;
       p_spi_handle->Instance = SPI2;
@@ -109,7 +109,7 @@ bool spiOpen(uint8_t ch)
        ret=true;
       }
       break;
-    default:
+    case _DEF_SPI3:
       spi_tbl[ch].spi_handle = &hspi3;
       p_spi_handle = spi_tbl[ch].spi_handle;
       p_spi_handle->Instance = SPI3;
@@ -124,7 +124,7 @@ bool spiOpen(uint8_t ch)
       p_spi_handle->Init.TIMode = SPI_TIMODE_DISABLE;
       p_spi_handle->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
       p_spi_handle->Init.CRCPolynomial = 10;
-
+      __HAL_RCC_DMA1_CLK_ENABLE();
       HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
       HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
       HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 0, 0);
@@ -139,13 +139,15 @@ bool spiOpen(uint8_t ch)
        ret=true;
       }
       break;
+    default:
+      break;
   }
   spi_tbl[ch].isInit = true;
   return ret;
 }
 
 
-bool SPI_PollByte(uint8_t ch, uint8_t *tx_data, uint8_t* rx_data, uint16_t length)
+bool SPI_SendReceive(uint8_t ch, uint8_t *tx_data, uint8_t* rx_data, uint16_t length)
 {
   bool ret=false;
   HAL_StatusTypeDef status;
@@ -158,7 +160,7 @@ bool SPI_PollByte(uint8_t ch, uint8_t *tx_data, uint8_t* rx_data, uint16_t lengt
 }
 
 
-bool SPI_DMABytes(uint8_t ch, uint8_t *tx_data, uint8_t* rx_data, uint16_t length)
+bool SPI_SendReceive_DMA(uint8_t ch, uint8_t *tx_data, uint8_t* rx_data, uint16_t length)
 {
   bool ret=false;
   HAL_StatusTypeDef status;

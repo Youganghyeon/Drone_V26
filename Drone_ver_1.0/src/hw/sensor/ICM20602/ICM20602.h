@@ -132,13 +132,6 @@ typedef struct _ICM20602{
   float gyro_z;
 }Struct_ICM20602;
 
-
-typedef enum{
-  IDLE = 0,
-  Active,
-  DONE,
-} SPI_STATE;
-
 typedef enum{
   AxisRaw   = 3,
   AxisGyroRaw,
@@ -147,31 +140,21 @@ typedef enum{
 /**
  * @brief ICM20602 structure definition.
  */
-
-extern Struct_ICM20602 ICM20602;
-extern int gyro_x_offset, gyro_y_offset, gyro_z_offset;
-
 /**
  * @brief ICM20602 function prototype definition.
  */
 
-void     ICM20602_GpioInit(void);
 bool     ICM20602_Init(void);
 //void ICM20602_Get6AxisRawData(short* accel, short* gyro);
 //void ICM20602_Get3AxisGyroRawData(short* gyro);
 //void ICM20602_Get3AxisAccRawData(short* accel);
-
 bool     ICM20602_DataReady(void);
-
 void     ICM20602_Read6AxisRawData(void);
 void     ICM20602_Read3AxisGyroRawData(void);
 void     ICM20602_Read3AxisAccRawData(void);
 void     parsing_6AxisRawData(short* accel, short* gyro);
 void     parsing_3AxisGyroRawData(short* gyro);
 void     parsing_Get3AxisAccRawyData(short* accel);
+bool     ICM20602_GetInfo(uint8_t state);
 
-uint8_t  ICM20602_Readbyte(uint8_t reg_addr);
-void     ICM20602_Readbytes(uint8_t reg_addr, uint8_t len, uint8_t* p_data);
-void     ICM20602_Writebyte(uint8_t reg_addr, uint8_t val);
-bool     ICM20602_Read(uint8_t state);
 #endif /* SRC_COMMON_HW_INCLUDE_ICM20602_H_ */

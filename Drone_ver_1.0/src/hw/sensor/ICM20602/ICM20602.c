@@ -9,37 +9,44 @@
 #include "ICM20602/ICM20602.h"
 #include "spi.h"
 
+#define DEF_ICM20602   DEF_HW_ICM20602
 
-Struct_ICM20602 ICM20602;
-int gyro_x_offset, gyro_y_offset, gyro_z_offset;
+static bool     ICM20602_Readbyte(uint8_t reg_addr, uint8_t* rx_data);
+static void     ICM20602_Readbytes(uint8_t reg_addr, uint8_t len, uint8_t* p_data);
+static void     ICM20602_Writebyte(uint8_t reg_addr, uint8_t val);
+static void     ICM20602_GpioInit(void);
+static void     ICM20602_RxFunc(void);
+
+
+static Struct_ICM20602 ICM20602;
+//static int gyro_x_offset, gyro_y_offset, gyro_z_offset;
 static uint8_t Axis_Data[15];
 static uint8_t Gyro_Data[15];
 static uint8_t ACC_Data[7];
-static void ICM20602_RxFunc(void);
 static uint8_t tx_buf[30];
-static uint8_t rx_buf[30];
 
 ICM_STATE ICM_Flag = AxisGyroRaw;
-SPI_STATE SPI_Flag = IDLE;
+SPI_DMA_STATE SPI_Flag = IDLE;
 
 
 void ICM20602_GpioInit(void)
 {
-  spiOpen(DEF_SPI_ICM20602);
+  spiOpen(DEF_ICM20602);
   chipDeselect(ICM20602);
 }
 
-uint8_t ICM20602_Readbyte(uint8_t reg_addr)
+
+bool ICM20602_Readbyte(uint8_t reg_addr, uint8_t* rx_data)
 {
+  bool ret=false;
   uint8_t tx_data;
-  uint8_t rx_data;
-  uint8_t dummy = 0x00;
+  uint8_t dummy,rx_dummy = 0x00;
   tx_data=(reg_addr | 0x80);
   chipSelect(ICM20602);
-  SPI_PollByte(DEF_SPI_ICM20602, &tx_data, &rx_data, 1);
-  SPI_PollByte(DEF_SPI_ICM20602, &dummy, &rx_data, 1);
+  ret=SPI_SendReceive(DEF_ICM20602, &tx_data, &rx_dummy, 1);
+  ret=SPI_SendReceive(DEF_ICM20602, &dummy, rx_data, 1);
   chipDeselect(ICM20602);
-  return rx_data;
+  return ret;
 }
 
 void ICM20602_Readbytes(uint8_t reg_addr, uint8_t len, uint8_t* p_data)
@@ -51,7 +58,7 @@ void ICM20602_Readbytes(uint8_t reg_addr, uint8_t len, uint8_t* p_data)
   {
     tx_buf[i] = 0x00;
   }
-  SPI_DMABytes(DEF_SPI_ICM20602, &tx_buf[0], p_data, (len+1));
+  SPI_SendReceive_DMA(DEF_ICM20602, &tx_buf[0], p_data, (len+1));
 }
 
 void ICM20602_Writebyte(uint8_t reg_addr, uint8_t val)
@@ -60,8 +67,8 @@ void ICM20602_Writebyte(uint8_t reg_addr, uint8_t val)
   uint8_t rx_data;
   tx_data= (reg_addr & 0x7F);
   chipSelect(ICM20602);
-  SPI_PollByte(DEF_SPI_ICM20602, &tx_data, &rx_data, 1);
-  SPI_PollByte(DEF_SPI_ICM20602, &val, &rx_data, 1);
+  SPI_SendReceive(DEF_ICM20602, &tx_data, &rx_data, 1);
+  SPI_SendReceive(DEF_ICM20602, &val, &rx_data, 1);
   chipDeselect(ICM20602);
 }
 
@@ -72,7 +79,7 @@ void ICM20602_Writebytes(uint8_t reg_addr, uint8_t len, uint8_t* tx_data)
   tx_data[0]= (reg&0x7F);
   if(len>30) return;
   CHIP_SELECT(ICM20602);
-  SPI_DMABytes(DEF_SPI_ICM20602, &TX_data, RX_data, len+1);
+  SPI_DMABytes(DEF_ICM20602, &TX_data, RX_data, len+1);
   CHIP_DESELECT(ICM20602);
 }
 #endif
@@ -80,18 +87,18 @@ uint8_t who_am_i=0;
 bool ICM20602_Init(void)
 {
   bool ret=false;
-  int16_t accel_raw_data[3]={0};
-  int16_t gyro_raw_data[3]={0};
+//  int16_t accel_raw_data[3]={0};
+ // int16_t gyro_raw_data[3]={0};
   chipDeselect(ICM20602);
-  if(IsSpiInit(DEF_SPI_ICM20602) != true)
+  if(IsSpiInit(DEF_ICM20602) != true)
   {
     ICM20602_GpioInit();
   }
-  spiRxCallbackRegister(DEF_SPI_ICM20602, ICM20602_RxFunc);
+  spiRxCallbackRegister(DEF_ICM20602, ICM20602_RxFunc);
   //printf("Checking ICM20602...");
 
   // check WHO_AM_I (0x75)
-  who_am_i = ICM20602_Readbyte(WHO_AM_I);
+  ICM20602_Readbyte(WHO_AM_I, &who_am_i);
 
   // who am i = 0x12
   if(who_am_i == 0x12)
@@ -101,7 +108,7 @@ bool ICM20602_Init(void)
   // recheck
   else if(who_am_i != 0x12)
   {
-    who_am_i = ICM20602_Readbyte(WHO_AM_I); // check again WHO_AM_I (0x75)
+    ICM20602_Readbyte(WHO_AM_I, &who_am_i); // check again WHO_AM_I (0x75)
 
     if (who_am_i != 0x12){
     ret=false;
@@ -152,7 +159,7 @@ bool ICM20602_Init(void)
   return ret; //OK
 }
 
-bool ICM20602_Read(uint8_t state)
+bool ICM20602_GetInfo(uint8_t state)
 {
   bool ret=false;
   ICM_Flag=state;

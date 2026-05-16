@@ -46,116 +46,61 @@
 #include "BNO080.h"
 #include <math.h>
 
-
+#define  DEF_BNO080  DEF_HW_BNO080
+#define  rawAccel     0
+#define  rawLinAccel  1
+#define  rawGyro      2
+#define  rawMag       3
 //Global Variables
-uint8_t shtpHeader[4]; //Each packet has a header of 4 bytes
-uint8_t shtpData[MAX_PACKET_SIZE];
-uint8_t sequenceNumber[6] = {0, 0, 0, 0, 0, 0}; //There are 6 com channels. Each channel has its own seqnum
-uint8_t commandSequenceNumber = 0;				//Commands have a seqNum as well. These are inside command packet, the header uses its own seqNum per channel
-uint32_t metaData[MAX_METADATA_SIZE];			//There is more than 10 words in a metadata record but we'll stop at Q point 3
+typedef struct{
+  uint8_t shtpHeader[4]; //Each packet has a header of 4 bytes
+  uint8_t shtpData[MAX_PACKET_SIZE];
+  uint8_t sequenceNumber[6] = {0, 0, 0, 0, 0, 0}; //There are 6 com channels. Each channel has its own seqnum
+  uint8_t commandSequenceNumber = 0;        //Commands have a seqNum as well. These are inside command packet, the header uses its own seqNum per channel
+  uint32_t metaData[MAX_METADATA_SIZE];     //There is more than 10 words in a metadata record but we'll stop at Q point 3
+}BNO080_Packet_tbl;
 
-//These are the raw sensor values pulled from the user requested Input Report
-uint16_t rawAccelX, rawAccelY, rawAccelZ, accelAccuracy;
-uint16_t rawLinAccelX, rawLinAccelY, rawLinAccelZ, accelLinAccuracy;
-uint16_t rawGyroX, rawGyroY, rawGyroZ, gyroAccuracy;
-uint16_t rawMagX, rawMagY, rawMagZ, magAccuracy;
-uint16_t rawQuatI, rawQuatJ, rawQuatK, rawQuatReal, rawQuatRadianAccuracy, quatAccuracy;
-uint16_t stepCount;
-uint32_t timeStamp;
-uint8_t stabilityClassifier;
-uint8_t activityClassifier;
-uint8_t *_activityConfidences; //Array that store the confidences of the 9 possible activities
-uint8_t calibrationStatus;	 //Byte R0 of ME Calibration Response
+typedef struct{
+  uint16_t rawX;
+  uint16_t rawY;
+  uint16_t rawZ;
+  uint16_t accuracy;
+}BNO080_Raw_tbl;
+
+typedef struct{
+  uint16_t rawQuatI;
+  uint16_t rawQuatJ;
+  uint16_t rawQuatK;
+  uint16_t rawQuatReal;
+  uint16_t rawQuatRadianAccuracy;
+  uint16_t quatAccuracy;
+}BNO080_Quaternion_tbl;
+
+typedef struct{
+  BNO080_Raw_tbl BNO080_Raw[4];
+  BNO080_Packet_tbl BNO080_Packet;
+  BNO080_Quaternion_tbl BNO080_Quat;
+  uint16_t stepCount;
+  uint32_t timeStamp;
+  uint8_t stabilityClassifier;
+  uint8_t activityClassifier;
+  uint8_t *_activityConfidences; //Array that store the confidences of the 9 possible activities
+  uint8_t calibrationStatus;   //Byte R0 of ME Calibration Response
+}BNO080_tbl;
+
+BNO080_tbl BNO080;
 
 //These Q values are defined in the datasheet but can also be obtained by querying the meta data records
 //See the read metadata example for more info
-int16_t rotationVector_Q1 = 14;
-int16_t accelerometer_Q1 = 8;
-int16_t linear_accelerometer_Q1 = 8;
-int16_t gyro_Q1 = 9;
-int16_t magnetometer_Q1 = 4;
+static int16_t rotationVector_Q1 = 14;
+static int16_t accelerometer_Q1 = 8;
+static int16_t linear_accelerometer_Q1 = 8;
+static int16_t gyro_Q1 = 9;
+static int16_t magnetometer_Q1 = 4;
 
 
 void BNO080_GPIO_SPI_Initialization(void)
 {
-	LL_SPI_InitTypeDef SPI_InitStruct = {0};
-	
-	LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
-	/* Peripheral clock enable */
-	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_SPI2);
-	
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
-	/**SPI2 GPIO Configuration
-	PB13   ------> SPI2_SCK
-	PB14   ------> SPI2_MISO
-	PB15   ------> SPI2_MOSI
-	*/
-	GPIO_InitStruct.Pin = LL_GPIO_PIN_13|LL_GPIO_PIN_14|LL_GPIO_PIN_15;
-	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-	GPIO_InitStruct.Alternate = LL_GPIO_AF_5;
-	LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-	
-	SPI_InitStruct.TransferDirection = LL_SPI_FULL_DUPLEX;
-	SPI_InitStruct.Mode = LL_SPI_MODE_MASTER;
-	SPI_InitStruct.DataWidth = LL_SPI_DATAWIDTH_8BIT;
-	SPI_InitStruct.ClockPolarity = LL_SPI_POLARITY_HIGH;
-	SPI_InitStruct.ClockPhase = LL_SPI_PHASE_2EDGE;
-	SPI_InitStruct.NSS = LL_SPI_NSS_SOFT;
-	SPI_InitStruct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV16;
-	SPI_InitStruct.BitOrder = LL_SPI_MSB_FIRST;
-	SPI_InitStruct.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
-	SPI_InitStruct.CRCPoly = 10;
-	LL_SPI_Init(BNO080_SPI_CHANNEL, &SPI_InitStruct);
-	LL_SPI_SetStandard(BNO080_SPI_CHANNEL, LL_SPI_PROTOCOL_MOTOROLA);
-	
-	/**BNO080 GPIO Control Configuration
-	 * PB12 ------> BNO080_CS (output)
-	 * PA8  ------> BNO080_PS0/WAKE (output)
-	 * PC9  ------> BNO080_RST (output)
-	 * PC8  ------> BNO080_INT (input)
-	 */
-	/**/
-	LL_GPIO_ResetOutputPin(BNO080_RST_PORT, BNO080_RST_PIN);
-	LL_GPIO_ResetOutputPin(BNO080_SPI_CS_PORT, BNO080_SPI_CS_PIN);
-	LL_GPIO_ResetOutputPin(BNO080_PS0_WAKE_PORT, BNO080_PS0_WAKE_PIN);
-	
-	/**/
-	GPIO_InitStruct.Pin = BNO080_SPI_CS_PIN;
-	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
-	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-	LL_GPIO_Init(BNO080_SPI_CS_PORT, &GPIO_InitStruct);
-	
-	/**/
-	GPIO_InitStruct.Pin = BNO080_RST_PIN;
-	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
-	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-	LL_GPIO_Init(BNO080_RST_PORT, &GPIO_InitStruct);
-	
-	/**/
-	GPIO_InitStruct.Pin = BNO080_PS0_WAKE_PIN;
-	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
-	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-	LL_GPIO_Init(BNO080_PS0_WAKE_PORT, &GPIO_InitStruct);
-	
-	/**/
-	GPIO_InitStruct.Pin = BNO080_INT_PIN;
-	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
-	GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-	LL_GPIO_Init(BNO080_INT_PORT, &GPIO_InitStruct);
-
-	LL_SPI_Enable(BNO080_SPI_CHANNEL);
-
 	CHIP_DESELECT(BNO080);
 	WAKE_HIGH();
 	RESET_HIGH();
@@ -163,29 +108,23 @@ void BNO080_GPIO_SPI_Initialization(void)
 
 bool bno080Init(void)
 {
+  bool ret = false;
 	BNO080_GPIO_SPI_Initialization();
 	
 	printf("Checking BNO080...");
 	
-	CHIP_DESELECT(BNO080); //CS HIGH
-	
-	//Configure the BNO080 for SPI communication
-	WAKE_HIGH();	//Before boot up the PS0/WAK pin must be high to enter SPI mode
-	RESET_LOW();	//Reset BNO080
-	HAL_Delay(200);	//Min length not specified in datasheet?
-	RESET_HIGH();	//Bring out of reset
+	CHIP_DESELECT(BNO080);                        //CS HIGH
+	                                             //Configure the BNO080 for SPI communication
+	WAKE_HIGH();                              	//Before boot up the PS0/WAK pin must be high to enter SPI mode
+	RESET_LOW();	                             //Reset BNO080
+	delay(200);	                              //Min length not specified in datasheet?
+	RESET_HIGH();	                           //Bring out of reset
 	
 	BNO080_waitForSPI(); //Wait until INT pin goes low.
 	
-	//At system startup, the hub must send its full advertisement message (see 5.2 and 5.3) to the
-	//host. It must not send any other data until this step is complete.
-	//When BNO080 first boots it broadcasts big startup packet
-	//Read it and dump it
 	BNO080_waitForSPI(); //Wait for assertion of INT before reading advert message.
 	BNO080_receivePacket();
 	
-	//The BNO080 will then transmit an unsolicited Initialize Response (see 6.4.5.2)
-	//Read it and dump it
 	BNO080_waitForSPI();  //Wait for assertion of INT before reading Init response
 	BNO080_receivePacket();
 	
@@ -193,64 +132,54 @@ bool bno080Init(void)
 	shtpData[0] = SHTP_REPORT_PRODUCT_ID_REQUEST; //Request the product ID and reset info
 	shtpData[1] = 0;						 //Reserved
 	
-	//Transmit packet on channel 2, 2 bytes
 	BNO080_sendPacket(CHANNEL_CONTROL, 2);
 	
-	//Now we wait for response
 	BNO080_waitForSPI();
-	if (BNO080_receivePacket() == 1)
+	if(BNO080_receivePacket() == 1)
 	{
-		printf("header: %d %d %d %d\n", shtpHeader[0], shtpHeader[1], shtpHeader[2], shtpHeader[3]);
-		if (shtpData[0] == SHTP_REPORT_PRODUCT_ID_RESPONSE)
+   	if(shtpData[0] == SHTP_REPORT_PRODUCT_ID_RESPONSE)
 		{
-			printf("BNO080 who_am_i = 0x%02x...ok\n\n", shtpData[0]);
-			return (0);
-		}// Sensor OK
+		  ret=true; // Sensor OK
+			//printf("BNO080 who_am_i = 0x%02x...ok\n\n", shtpData[0]);
+		}
 	}
-	
-	printf("BNO080 Not OK: 0x%02x Should be 0x%02x\n", shtpData[0], SHTP_REPORT_PRODUCT_ID_RESPONSE);
-	return (1); //Something went wrong
+	//printf("BNO080 Not OK: 0x%02x Should be 0x%02x\n", shtpData[0], SHTP_REPORT_PRODUCT_ID_RESPONSE);
+	return ret; //Something went wrong
 }
 
-unsigned char SPI2_SendByte(unsigned char data)
+bool BNO080_TxRxByte(uint8_t *tx_data, uint8_t* rx_data)
 {
-	while(LL_SPI_IsActiveFlag_TXE(BNO080_SPI_CHANNEL)==RESET);
-	LL_SPI_TransmitData8(BNO080_SPI_CHANNEL, data);
-	
-	while(LL_SPI_IsActiveFlag_RXNE(BNO080_SPI_CHANNEL)==RESET);
-	return LL_SPI_ReceiveData8(BNO080_SPI_CHANNEL);
+  return SPI_PollByte(DEF_BNO080, tx_data, rx_data, 1);
+}
+
+bool BNO080_RxByte(uint8_t *tx_data, uint8_t* rx_data)
+{
+ return SPI
 }
 
 
-//////////////////////////////////////////////////////////////////////////
-//init
-//////////////////////////////////////////////////////////////////////////
-
-//Updates the latest variables if possible
-//Returns false if new readings are not available
-int BNO080_dataAvailable(void)
+bool BNO080_dataAvailable(BNO080_tbl_t* p_sensor)
 {
-	//If we have an interrupt pin connection available, check if data is available.
-	//If int pin is NULL, then we'll rely on BNO080_receivePacket() to timeout
-	//See issue 13: https://github.com/sparkfun/SparkFun_BNO080_Arduino_Library/issues/13
-	if (LL_GPIO_IsInputPinSet(BNO080_INT_PORT, BNO080_INT_PIN) == 1)
-		return (0);
 
-	if (BNO080_receivePacket() == 1)
+  bool ret= false;
+	if(HAL_GPIO_ReadPin(BNO080_INT_PORT, BNO080_INT_PIN) == GPIO_PIN_SET)
 	{
-		//Check to see if this packet is a sensor reporting its data to us
-		if (shtpHeader[2] == CHANNEL_REPORTS && shtpData[0] == SHTP_REPORT_BASE_TIMESTAMP)
+	  ret=false;
+	}
+	if(BNO080_receivePacket() == true)
+	{
+		if(shtpHeader[2] == CHANNEL_REPORTS && shtpData[0] == SHTP_REPORT_BASE_TIMESTAMP)
 		{
-			BNO080_parseInputReport(); //This will update the rawAccelX, etc variables depending on which feature report is found
-			return (1);
+			BNO080_parseInputReport();
+			ret=true;
 		}
 		else if (shtpHeader[2] == CHANNEL_CONTROL)
 		{
-			BNO080_parseCommandReport(); //This will update responses to commands, calibrationStatus, etc.
-			return (1);
+			BNO080_parseCommandReport();
+			ret=true;
 		}
 	}
-	return (0);
+	return ret;
 }
 
 //This function pulls the data from the command response report
@@ -423,6 +352,26 @@ void BNO080_parseInputReport(void)
 }
 
 //Return the rotation vector quaternion I
+float BNO080_getvalue(BNO080_tbl* p_sensor, getMode_t mode, getRaw_t raw)
+{
+
+  switch(mode)
+  {
+    case rawAccel:
+    case rawLinAccel:
+    case rawGyro:
+    case rawMag:
+    case rawQuatI:
+    case rawQuatJ:
+    case rawQuatK:
+    case rawQuatReal:
+        if(raw!=Accurancy)
+        {
+          BNO080_qToFloat
+        }
+  }
+  BNO080
+}
 float BNO080_getQuatI()
 {
 	return BNO080_qToFloat(rawQuatI, rotationVector_Q1);
@@ -765,119 +714,57 @@ float BNO080_qToFloat(int16_t fixedPointValue, uint8_t qPoint)
 	return fixedPointValue * powf(2, qPoint * -1);
 }
 
-//Sends the packet to enable the rotation vector
-void BNO080_enableRotationVector(uint16_t timeBetweenReports)
+bool BNO080_set_report(Sensor_Mode_t mode, uint16_t timeBetweenReports)
 {
-	BNO080_setFeatureCommand(SENSOR_REPORTID_ROTATION_VECTOR, timeBetweenReports, 0);
+  BNO080_setFeatureCommand(mode, timeBetweenReports, 0);
+  return true;
 }
 
-//Sends the packet to enable the rotation vector
-void BNO080_enableGameRotationVector(uint16_t timeBetweenReports)
+bool BNO080_calibrateSet(Calibrate_Mode_t mode)
 {
-	BNO080_setFeatureCommand(SENSOR_REPORTID_GAME_ROTATION_VECTOR, timeBetweenReports, 0);
+  bool ret=false;
+  if(mode<CALIBRATE_MAX)
+  {
+    BNO080_sendCalibrateCommand(mode);
+    ret=true;
+  }
+  return ret;
 }
-
-//Sends the packet to enable the accelerometer
-void BNO080_enableAccelerometer(uint16_t timeBetweenReports)
-{
-	BNO080_setFeatureCommand(SENSOR_REPORTID_ACCELEROMETER, timeBetweenReports, 0);
-}
-
-//Sends the packet to enable the accelerometer
-void BNO080_enableLinearAccelerometer(uint16_t timeBetweenReports)
-{
-	BNO080_setFeatureCommand(SENSOR_REPORTID_LINEAR_ACCELERATION, timeBetweenReports, 0);
-}
-
-//Sends the packet to enable the gyro
-void BNO080_enableGyro(uint16_t timeBetweenReports)
-{
-	BNO080_setFeatureCommand(SENSOR_REPORTID_GYROSCOPE, timeBetweenReports, 0);
-}
-
-//Sends the packet to enable the magnetometer
-void BNO080_enableMagnetometer(uint16_t timeBetweenReports)
-{
-	BNO080_setFeatureCommand(SENSOR_REPORTID_MAGNETIC_FIELD, timeBetweenReports, 0);
-}
-
-//Sends the packet to enable the step counter
-void BNO080_enableStepCounter(uint16_t timeBetweenReports)
-{
-	BNO080_setFeatureCommand(SENSOR_REPORTID_STEP_COUNTER, timeBetweenReports, 0);
-}
-
-//Sends the packet to enable the Stability Classifier
-void BNO080_enableStabilityClassifier(uint16_t timeBetweenReports)
-{
-	BNO080_setFeatureCommand(SENSOR_REPORTID_STABILITY_CLASSIFIER, timeBetweenReports, 0);
-}
-
-//Sends the commands to begin calibration of the accelerometer
-void BNO080_calibrateAccelerometer()
-{
-	BNO080_sendCalibrateCommand(CALIBRATE_ACCEL);
-}
-
-//Sends the commands to begin calibration of the gyro
-void BNO080_calibrateGyro()
-{
-	BNO080_sendCalibrateCommand(CALIBRATE_GYRO);
-}
-
-//Sends the commands to begin calibration of the magnetometer
-void BNO080_calibrateMagnetometer()
-{
-	BNO080_sendCalibrateCommand(CALIBRATE_MAG);
-}
-
-//Sends the commands to begin calibration of the planar accelerometer
-void BNO080_calibratePlanarAccelerometer()
-{
-	BNO080_sendCalibrateCommand(CALIBRATE_PLANAR_ACCEL);
-}
-
-//See 2.2 of the Calibration Procedure document 1000-4044
-void BNO080_calibrateAll()
-{
-	BNO080_sendCalibrateCommand(CALIBRATE_ACCEL_GYRO_MAG);
-}
-
-void BNO080_endCalibration()
-{
-	BNO080_sendCalibrateCommand(CALIBRATE_STOP); //Disables all calibrations
-}
-
 //See page 51 of reference manual - ME Calibration Response
 //Byte 5 is parsed during the readPacket and stored in calibrationStatus
-int BNO080_calibrationComplete()
+bool BNO080_calibrationComplete(void)
 {
-	if (calibrationStatus == 0)
-		return (1);
-	return (0);
+  bool ret=false;
+  BNO080_tbl* p_sensor = &BNO080;
+	if(p_sensor->calibrationStatus== 0)
+	{
+	  ret=true;
+	}
+	return ret;
 }
 
 //Given a sensor's report ID, this tells the BNO080 to begin reporting the values
 //Also sets the specific config word. Useful for personal activity classifier
 void BNO080_setFeatureCommand(uint8_t reportID, uint32_t microsBetweenReports, uint32_t specificConfig)
 {
-	shtpData[0] = SHTP_REPORT_SET_FEATURE_COMMAND;	 //Set feature command. Reference page 55
-	shtpData[1] = reportID;						 //Feature Report ID. 0x01 = Accelerometer, 0x05 = Rotation vector
-	shtpData[2] = 0;							 //Feature flags
-	shtpData[3] = 0;							 //Change sensitivity (LSB)
-	shtpData[4] = 0;							 //Change sensitivity (MSB)
-	shtpData[5] = (microsBetweenReports >> 0) & 0xFF;  //Report interval (LSB) in microseconds. 0x7A120 = 500ms
-	shtpData[6] = (microsBetweenReports >> 8) & 0xFF;  //Report interval
-	shtpData[7] = (microsBetweenReports >> 16) & 0xFF; //Report interval
-	shtpData[8] = (microsBetweenReports >> 24) & 0xFF; //Report interval (MSB)
-	shtpData[9] = 0;							 //Batch Interval (LSB)
-	shtpData[10] = 0;							 //Batch Interval
-	shtpData[11] = 0;							 //Batch Interval
-	shtpData[12] = 0;							 //Batch Interval (MSB)
-	shtpData[13] = (specificConfig >> 0) & 0xFF;	   	 //Sensor-specific config (LSB)
-	shtpData[14] = (specificConfig >> 8) & 0xFF;	   	 //Sensor-specific config
-	shtpData[15] = (specificConfig >> 16) & 0xFF;	 //Sensor-specific config
-	shtpData[16] = (specificConfig >> 24) & 0xFF;	 //Sensor-specific config (MSB)
+  BNO080_Packet_tbl* p_packet = &BNO080.BNO080_Packet;
+  p_packet->shtpData[0] = SHTP_REPORT_SET_FEATURE_COMMAND;	 //Set feature command. Reference page 55
+  p_packet->shtpData[1] = reportID;						 //Feature Report ID. 0x01 = Accelerometer, 0x05 = Rotation vector
+  p_packet->shtpData[2] = 0;							 //Feature flags
+  p_packet->shtpData[3] = 0;							 //Change sensitivity (LSB)
+  p_packet->shtpData[4] = 0;							 //Change sensitivity (MSB)
+  p_packet->shtpData[5] = (microsBetweenReports >> 0) & 0xFF;  //Report interval (LSB) in microseconds. 0x7A120 = 500ms
+  p_packet->shtpData[6] = (microsBetweenReports >> 8) & 0xFF;  //Report interval
+  p_packet->shtpData[7] = (microsBetweenReports >> 16) & 0xFF; //Report interval
+  p_packet->shtpData[8] = (microsBetweenReports >> 24) & 0xFF; //Report interval (MSB)
+  p_packet->shtpData[9] = 0;							 //Batch Interval (LSB)
+  p_packet->shtpData[10] = 0;							 //Batch Interval
+  p_packet->shtpData[11] = 0;							 //Batch Interval
+  p_packet->shtpData[12] = 0;							 //Batch Interval (MSB)
+  p_packet->shtpData[13] = (specificConfig >> 0) & 0xFF;	   	 //Sensor-specific config (LSB)
+  p_packet->shtpData[14] = (specificConfig >> 8) & 0xFF;	   	 //Sensor-specific config
+  p_packet->shtpData[15] = (specificConfig >> 16) & 0xFF;	 //Sensor-specific config
+  p_packet->shtpData[16] = (specificConfig >> 24) & 0xFF;	 //Sensor-specific config (MSB)
 
 	//Transmit packet on channel 2, 17 bytes
 	BNO080_sendPacket(CHANNEL_CONTROL, 17);
@@ -888,9 +775,10 @@ void BNO080_setFeatureCommand(uint8_t reportID, uint32_t microsBetweenReports, u
 //The caller is expected to set P0 through P8 prior to calling
 void BNO080_sendCommand(uint8_t command)
 {
-	shtpData[0] = SHTP_REPORT_COMMAND_REQUEST; //Command Request
-	shtpData[1] = commandSequenceNumber++;	 //Increments automatically each function call
-	shtpData[2] = command;					   //Command
+  BNO080_Packet_tbl* p_packet = &BNO080.BNO080_Packet;
+  p_packet->shtpData[0] = SHTP_REPORT_COMMAND_REQUEST; //Command Request
+  p_packet->shtpData[1] = p_packet->commandSequenceNumber++;	 //Increments automatically each function call
+  p_packet->shtpData[2] = command;					   //Command
 
 	//Caller must set these
 	/*shtpData[3] = 0; //P0
@@ -909,40 +797,50 @@ void BNO080_sendCommand(uint8_t command)
 
 //This tells the BNO080 to begin calibrating
 //See page 50 of reference manual and the 1000-4044 calibration doc
+/*shtpData[3] = 0; //P0 - Accel Cal Enable
+  shtpData[4] = 0; //P1 - Gyro Cal Enable
+  shtpData[5] = 0; //P2 - Mag Cal Enable
+  shtpData[6] = 0; //P3 - Subcommand 0x00
+  shtpData[7] = 0; //P4 - Planar Accel Cal Enable
+  shtpData[8] = 0; //P5 - Reserved
+  shtpData[9] = 0; //P6 - Reserved
+  shtpData[10] = 0; //P7 - Reserved
+  shtpData[11] = 0; //P8 - Reserved*/
 void BNO080_sendCalibrateCommand(uint8_t thingToCalibrate)
 {
-	/*shtpData[3] = 0; //P0 - Accel Cal Enable
-	shtpData[4] = 0; //P1 - Gyro Cal Enable
-	shtpData[5] = 0; //P2 - Mag Cal Enable
-	shtpData[6] = 0; //P3 - Subcommand 0x00
-	shtpData[7] = 0; //P4 - Planar Accel Cal Enable
-	shtpData[8] = 0; //P5 - Reserved
-	shtpData[9] = 0; //P6 - Reserved
-	shtpData[10] = 0; //P7 - Reserved
-	shtpData[11] = 0; //P8 - Reserved*/
-
-	for (uint8_t x = 3; x < 12; x++) //Clear this section of the shtpData array
-		shtpData[x] = 0;
-
-	if (thingToCalibrate == CALIBRATE_ACCEL)
-		shtpData[3] = 1;
-	else if (thingToCalibrate == CALIBRATE_GYRO)
-		shtpData[4] = 1;
-	else if (thingToCalibrate == CALIBRATE_MAG)
-		shtpData[5] = 1;
-	else if (thingToCalibrate == CALIBRATE_PLANAR_ACCEL)
-		shtpData[7] = 1;
-	else if (thingToCalibrate == CALIBRATE_ACCEL_GYRO_MAG)
+  BNO080_tbl* p_sensor = &BNO080;
+  BNO080_Packet_tbl* p_packet = &BNO080.BNO080_Packet;
+	for (uint8_t i = 3; i < 12; i++) //Clear this section of the shtpData array
 	{
-		shtpData[3] = 1;
-		shtpData[4] = 1;
-		shtpData[5] = 1;
+	  p_packet->shtpData[i] = 0;
 	}
-	else if (thingToCalibrate == CALIBRATE_STOP)
-		; //Do nothing, bytes are set to zero
+	switch(thingToCalibrate)
+	{
+	  case CALIBRATE_ACCEL:
+	    p_packet->shtpData[3] = 1;
+	    break;
+	  case CALIBRATE_GYRO:
+	    p_packet->shtpData[4] = 1;
+	    break;
+	  case CALIBRATE_MAG:
+	    p_packet->shtpData[5] = 1;
+	    break;
+	  case CALIBRATE_PLANAR_ACCEL:
+	    p_packet->shtpData[7] = 1;
+	    break;
+	  case CALIBRATE_ACCEL_GYRO_MAG:
+	    p_packet->shtpData[3] = 1;
+	    p_packet->shtpData[4] = 1;
+	    p_packet->shtpData[5] = 1;
+	    break;
+	  case CALIBRATE_STOP:
+	    break;
+	  default :
+	    break;
+	} //Do nothing, bytes are set to zero
 
 	//Make the internal calStatus variable non-zero (operation failed) so that user can test while we wait
-	calibrationStatus = 1;
+	p_sensor->calibrationStatus = 1;
 
 	//Using this shtpData packet, send a command
 	BNO080_sendCommand(COMMAND_ME_CALIBRATE);
@@ -950,22 +848,24 @@ void BNO080_sendCalibrateCommand(uint8_t thingToCalibrate)
 
 //Request ME Calibration Status from BNO080
 //See page 51 of reference manual
+/*shtpData[3] = 0; //P0 - Reserved
+  shtpData[4] = 0; //P1 - Reserved
+  shtpData[5] = 0; //P2 - Reserved
+  shtpData[6] = 0; //P3 - 0x01 - Subcommand: Get ME Calibration
+  shtpData[7] = 0; //P4 - Reserved
+  shtpData[8] = 0; //P5 - Reserved
+  shtpData[9] = 0; //P6 - Reserved
+  shtpData[10] = 0; //P7 - Reserved
+  shtpData[11] = 0; //P8 - Reserved*/
+
 void BNO080_requestCalibrationStatus()
 {
-	/*shtpData[3] = 0; //P0 - Reserved
-	shtpData[4] = 0; //P1 - Reserved
-	shtpData[5] = 0; //P2 - Reserved
-	shtpData[6] = 0; //P3 - 0x01 - Subcommand: Get ME Calibration
-	shtpData[7] = 0; //P4 - Reserved
-	shtpData[8] = 0; //P5 - Reserved
-	shtpData[9] = 0; //P6 - Reserved
-	shtpData[10] = 0; //P7 - Reserved
-	shtpData[11] = 0; //P8 - Reserved*/
-
-	for (uint8_t x = 3; x < 12; x++) //Clear this section of the shtpData array
-		shtpData[x] = 0;
-
-	shtpData[6] = 0x01; //P3 - 0x01 - Subcommand: Get ME Calibration
+  BNO080_Packet_tbl* p_packet = &BNO080.BNO080_Packet;
+	for (uint8_t i = 3; i < 12; i++) //Clear this section of the shtpData array
+	{
+	  p_packet->shtpData[i] = 0;
+	}
+	p_packet->shtpData[6] = 0x01; //P3 - 0x01 - Subcommand: Get ME Calibration
 
 	//Using this shtpData packet, send a command
 	BNO080_sendCommand(COMMAND_ME_CALIBRATE);
@@ -973,131 +873,109 @@ void BNO080_requestCalibrationStatus()
 
 //This tells the BNO080 to save the Dynamic Calibration Data (DCD) to flash
 //See page 49 of reference manual and the 1000-4044 calibration doc
+/*shtpData[3] = 0; //P0 - Reserved
+  shtpData[4] = 0; //P1 - Reserved
+  shtpData[5] = 0; //P2 - Reserved
+  shtpData[6] = 0; //P3 - Reserved
+  shtpData[7] = 0; //P4 - Reserved
+  shtpData[8] = 0; //P5 - Reserved
+  shtpData[9] = 0; //P6 - Reserved
+  shtpData[10] = 0; //P7 - Reserved
+  shtpData[11] = 0; //P8 - Reserved*/
 void BNO080_saveCalibration()
 {
-	/*shtpData[3] = 0; //P0 - Reserved
-	shtpData[4] = 0; //P1 - Reserved
-	shtpData[5] = 0; //P2 - Reserved
-	shtpData[6] = 0; //P3 - Reserved
-	shtpData[7] = 0; //P4 - Reserved
-	shtpData[8] = 0; //P5 - Reserved
-	shtpData[9] = 0; //P6 - Reserved
-	shtpData[10] = 0; //P7 - Reserved
-	shtpData[11] = 0; //P8 - Reserved*/
-
-	for (uint8_t x = 3; x < 12; x++) //Clear this section of the shtpData array
-		shtpData[x] = 0;
-
-	//Using this shtpData packet, send a command
+  BNO080_Packet_tbl* p_packet = &BNO080.BNO080_Packet;
+	for (uint8_t i = 3; i < 12; i++) //Clear this section of the shtpData array
+	{
+	  p_packet->shtpData[i] = 0;
+	}   //Using this shtpData packet, send a command
 	BNO080_sendCommand(COMMAND_DCD); //Save DCD command
 }
 
 //Blocking wait for BNO080 to assert (pull low) the INT pin
 //indicating it's ready for comm. Can take more than 104ms
 //after a hardware reset
-int BNO080_waitForSPI(void)
+bool BNO080_waitForSPI(void)
 {
-	for (uint32_t counter = 0; counter < 0xffffffff; counter++) //Don't got more than 255
-	{
-		if (LL_GPIO_IsInputPinSet(BNO080_INT_PORT, BNO080_INT_PIN) == 0)
-		{
-			//printf("\nData available\n");
-			return (1);
-		}
-		//printf("SPI Wait %d\n", counter);
-	}
-	printf("\nData not available\n");
-	return (0);
+  for (uint32_t counter = 0; counter < 0xffffffff; counter++) //Don't got more than 255
+  {
+    if (HAL_GPIO_ReadPin(BNO080_INT_PORT, BNO080_INT_PIN) == GPIO_PIN_RESET)
+    {
+      return true;
+    }
+  }
+  return false;
 }
 
 
-//Check to see if there is any new data available
-//Read the contents of the incoming packet into the shtpData array
-int BNO080_receivePacket(void)
+
+bool BNO080_receivePacket(void)
 {
+  BNO080_Packet_tbl* p_packet = &BNO080.BNO080_Packet;
+  bool ret=false;
 	uint8_t incoming;
-
-	if (LL_GPIO_IsInputPinSet(BNO080_INT_PORT, BNO080_INT_PIN) == 1)
-		return (0); //Data is not available
-	//H_INTN : LOW
-	//Old way: if (BNO080_waitForSPI() == 0) return (0); //Something went wrong
-
-	//Get first four bytes to find out how much data we need to read
-
+	uint8_t zero=0x00;
+	uint8_t full=0xFF;
+	if (HAL_GPIO_ReadPin(BNO080_INT_PORT, BNO080_INT_PIN) == GPIO_PIN_SET)
+	{
+	  return false;
+	}
 	CHIP_SELECT(BNO080);// CS LOW
-
 	//Get the first four bytes, aka the packet header
-	uint8_t packetLSB = SPI2_SendByte(0);
-	uint8_t packetMSB = SPI2_SendByte(0);
-	uint8_t channelNumber = SPI2_SendByte(0);
-	uint8_t sequenceNumber = SPI2_SendByte(0); //Not sure if we need to store this or not
-
-	//Store the header info
-	shtpHeader[0] = packetLSB;
-	shtpHeader[1] = packetMSB;
-	shtpHeader[2] = channelNumber;
-	shtpHeader[3] = sequenceNumber;
-
+  for(int i=0; i<4; i++)
+  {
+    BNO080_TxRxByte(&full, &p_packet->shtpHeader[i]);
+  }
 	//Calculate the number of data bytes in this packet
-	int16_t dataLength = ((uint16_t)packetMSB << 8 | packetLSB);
+	int16_t dataLength = ((uint16_t)p_packet->shtpHeader[0] << 8 | p_packet->shtpHeader[1]);
 	dataLength &= 0x7fff; //Clear the MSbit.
 	//This bit indicates if this package is a continuation of the last. Ignore it for now.
 	//TODO catch this as an error and exit
 	if (dataLength == 0)
 	{
-		//Packet is empty
-		return (0); //All done
+		return false;
 	}
 	dataLength -= 4; //Remove the header bytes from the data count
 
-	//printf("length: %d\n", dataLength);
-
-	//Read incoming data into the shtpData array
 	for (uint16_t dataSpot = 0; dataSpot < dataLength; dataSpot++)
 	{
-		incoming = SPI2_SendByte(0xFF);
-		//printf("%d ", incoming);
+		BNO080_TxRxByte(&full, &incoming);
 		if (dataSpot < MAX_PACKET_SIZE)	//BNO080 can respond with upto 270 bytes, avoid overflow
-			shtpData[dataSpot] = incoming; //Store data into the shtpData array
+		{
+		  p_packet->shtpHeader[dataSpot] = incoming; //Store data into the shtpData array
+		}
 	}
-	//printf("\n");
-
 	CHIP_DESELECT(BNO080); //Release BNO080
 	return (1); //We're done!
 }
 
 
-//Given the data packet, send the header then the data
-//Returns false if sensor does not ACK
 //TODO - Arduino has a max 32 byte send. Break sending into multi packets if needed.
 int BNO080_sendPacket(uint8_t channelNumber, uint8_t dataLength)
 {
+  BNO080_Packet_tbl* p_packet = &BNO080.BNO080_Packet;
 	uint8_t packetLength = dataLength + 4; //Add four bytes for the header
-
-	//Wait for BNO080 to indicate it is available for communication
+	                                        //Wait for BNO080 to indicate it is available for communication
 	if (BNO080_waitForSPI() == 0)
-		return (0); //Data is not available
-
-	//BNO080 has max CLK of 3MHz, MSB first,
-	//The BNO080 uses CPOL = 1 and CPHA = 1. This is mode3
+	{
+	  return (0);
+	}
 	CHIP_SELECT(BNO080);
-
-	//Send the 4 byte packet header
+	                                         //Send the 4 byte packet header
 	SPI2_SendByte(packetLength & 0xFF);			//Packet length LSB
 	SPI2_SendByte(packetLength >> 8);				//Packet length MSB
 	SPI2_SendByte(channelNumber);					//Channel number
-	SPI2_SendByte(sequenceNumber[channelNumber]++); 	//Send the sequence number, increments with each packet sent, different counter for each channel
+	SPI2_SendByte(p_packet->sequenceNumber[channelNumber]++); 	//Send the sequence number, increments with each packet sent, different counter for each channel
 
 	for (uint8_t i = 0; i < dataLength; i++)
 	{
-		SPI2_SendByte(shtpData[i]);
+		SPI2_SendByte(p_packet->shtpData[i]);
 	}
 
 	CHIP_DESELECT(BNO080);
 
 	return (1);
 }
-///////////////////////////////////////////////////////////////////////////
 
 
 

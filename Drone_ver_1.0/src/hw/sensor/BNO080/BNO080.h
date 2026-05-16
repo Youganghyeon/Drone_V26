@@ -119,18 +119,20 @@ enum Registers
 
 //All the different sensors and features we can get reports from
 //These are used when enabling a given sensor
-#define SENSOR_REPORTID_ACCELEROMETER 0x01
-#define SENSOR_REPORTID_GYROSCOPE 0x02
-#define SENSOR_REPORTID_MAGNETIC_FIELD 0x03
-#define SENSOR_REPORTID_LINEAR_ACCELERATION 0x04
-#define SENSOR_REPORTID_ROTATION_VECTOR 0x05
-#define SENSOR_REPORTID_GRAVITY 0x06
-#define SENSOR_REPORTID_GAME_ROTATION_VECTOR 0x08
-#define SENSOR_REPORTID_GEOMAGNETIC_ROTATION_VECTOR 0x09
-#define SENSOR_REPORTID_TAP_DETECTOR 0x10
-#define SENSOR_REPORTID_STEP_COUNTER 0x11
-#define SENSOR_REPORTID_STABILITY_CLASSIFIER 0x13
-#define SENSOR_REPORTID_PERSONAL_ACTIVITY_CLASSIFIER 0x1E
+typedef enum{
+  SENSOR_REPORTID_ACCELEROMETER                 = 0x01,
+  SENSOR_REPORTID_GYROSCOPE                     = 0x02,
+  SENSOR_REPORTID_MAGNETIC_FIELD                = 0x03,
+  SENSOR_REPORTID_LINEAR_ACCELERATION           = 0x04,
+  SENSOR_REPORTID_ROTATION_VECTOR               = 0x05,
+  SENSOR_REPORTID_GRAVITY                       = 0x06,
+  SENSOR_REPORTID_GAME_ROTATION_VECTOR          = 0x08,
+  SENSOR_REPORTID_GEOMAGNETIC_ROTATION_VECTOR   = 0x09,
+  SENSOR_REPORTID_TAP_DETECTOR                  = 0x10,
+  SENSOR_REPORTID_STEP_COUNTER                  = 0x11,
+  SENSOR_REPORTID_STABILITY_CLASSIFIER          = 0x13,
+  SENSOR_REPORTID_PERSONAL_ACTIVITY_CLASSIFIER  = 0x1E
+}Sensor_Mode_t;
 
 //Record IDs from figure 29, page 29 reference manual
 //These are used to read the metadata for each sensor type
@@ -141,6 +143,7 @@ enum Registers
 
 //Command IDs from section 6.4, page 42
 //These are used to calibrate, initialize, set orientation, tare etc the sensor
+
 #define COMMAND_ERRORS 1
 #define COMMAND_COUNTER 2
 #define COMMAND_TARE 3
@@ -151,12 +154,15 @@ enum Registers
 #define COMMAND_OSCILLATOR 10
 #define COMMAND_CLEAR_DCD 11
 
-#define CALIBRATE_ACCEL 0
-#define CALIBRATE_GYRO 1
-#define CALIBRATE_MAG 2
-#define CALIBRATE_PLANAR_ACCEL 3
-#define CALIBRATE_ACCEL_GYRO_MAG 4
-#define CALIBRATE_STOP 5
+typedef enum{
+ CALIBRATE_ACCEL= 0x00,
+ CALIBRATE_GYRO,
+ CALIBRATE_MAG,
+ CALIBRATE_PLANAR_ACCEL,
+ CALIBRATE_ACCEL_GYRO_MAG,
+ CALIBRATE_STOP,
+ CALIBRATE_MAX
+}Calibrate_Mode_t;
 
 #define MAX_PACKET_SIZE 128 //Packets can be up to 32k but we don't have that much RAM.
 #define MAX_METADATA_SIZE 9 //This is in words. There can be many but we mostly only care about the first 9 (Qs, range, etc)
