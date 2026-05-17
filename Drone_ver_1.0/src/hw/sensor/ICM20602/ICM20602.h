@@ -130,13 +130,13 @@ typedef struct _ICM20602{
   float gyro_x;
   float gyro_y;
   float gyro_z;
-}Struct_ICM20602;
+}ICM20602_tbl_t;
 
 typedef enum{
   AxisRaw   = 3,
   AxisGyroRaw,
   AxisAccRaw
-} ICM_STATE;
+} ICM_MODE_STATE;
 /**
  * @brief ICM20602 structure definition.
  */
@@ -155,6 +155,6 @@ void     ICM20602_Read3AxisAccRawData(void);
 void     parsing_6AxisRawData(short* accel, short* gyro);
 void     parsing_3AxisGyroRawData(short* gyro);
 void     parsing_Get3AxisAccRawyData(short* accel);
-bool     ICM20602_GetInfo(uint8_t state);
+bool     ICM20602_GetInfo(ICM20602_tbl_t* p_sensor, uint8_t state);
 
 #endif /* SRC_COMMON_HW_INCLUDE_ICM20602_H_ */

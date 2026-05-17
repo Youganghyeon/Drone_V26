@@ -17,16 +17,14 @@ static void     ICM20602_Writebyte(uint8_t reg_addr, uint8_t val);
 static void     ICM20602_GpioInit(void);
 static void     ICM20602_RxFunc(void);
 
-
-static Struct_ICM20602 ICM20602;
 //static int gyro_x_offset, gyro_y_offset, gyro_z_offset;
 static uint8_t Axis_Data[15];
 static uint8_t Gyro_Data[15];
 static uint8_t ACC_Data[7];
 static uint8_t tx_buf[30];
 
-ICM_STATE ICM_Flag = AxisGyroRaw;
-SPI_DMA_STATE SPI_Flag = IDLE;
+ICM_MODE_STATE ICM_Mode = AxisGyroRaw;
+SPI_DMA_STATE ICM_Flag = IDLE;
 
 
 void ICM20602_GpioInit(void)
@@ -159,11 +157,11 @@ bool ICM20602_Init(void)
   return ret; //OK
 }
 
-bool ICM20602_GetInfo(uint8_t state)
+bool ICM20602_GetInfo(ICM20602_tbl_t* p_sensor, uint8_t state)
 {
   bool ret=false;
-  ICM_Flag=state;
-  if(ICM20602_DataReady()==1 && (SPI_Flag == IDLE || SPI_Flag == DONE))
+  ICM_Mode=state;
+  if(ICM20602_DataReady()==1 && (ICM_Flag == IDLE))
   {
     switch(state)
     {
@@ -172,9 +170,6 @@ bool ICM20602_GetInfo(uint8_t state)
         ret=true;
         break;
       case AxisGyroRaw:
-        ICM20602.gyro_x = ICM20602.gyro_x_raw*2000.f/32768.f;
-        ICM20602.gyro_y = ICM20602.gyro_y_raw*2000.f/32768.f; // 2000: sensitivy, 32768 : adc range
-        ICM20602.gyro_z = ICM20602.gyro_z_raw*2000.f/32768.f;
         ICM20602_Read3AxisGyroRawData();
         ret=true;
         break;
@@ -186,6 +181,25 @@ bool ICM20602_GetInfo(uint8_t state)
         ret=false;
         break;
     }
+  }
+  if(ICM_Flag == DONE)
+  {
+    switch(state)
+    {
+      case AxisRaw:
+        parsing_6AxisRawData(&p_sensor->acc_x_raw, &p_sensor->gyro_x_raw);
+        break;
+      case AxisGyroRaw:
+        parsing_3AxisGyroRawData(&p_sensor->gyro_x_raw);
+        p_sensor->gyro_x = p_sensor->gyro_x_raw*2000.f/32768.f;
+        p_sensor->gyro_y = p_sensor->gyro_y_raw*2000.f/32768.f; // 2000: sensitivy, 32768 : adc range
+        p_sensor->gyro_z = p_sensor->gyro_z_raw*2000.f/32768.f;
+        break;
+      case AxisAccRaw:
+        parsing_Get3AxisAccRawyData(&p_sensor->acc_x_raw);
+        break;
+    }
+    ICM_Flag = IDLE;
   }
   return ret;
 }
@@ -234,42 +248,23 @@ void parsing_Get3AxisAccRawyData(short* accel)
 void ICM20602_RxFunc(void)
 {
   chipDeselect(ICM20602);
-  switch(ICM_Flag)
-  {
-    case AxisRaw:
-      parsing_6AxisRawData(&ICM20602.acc_x_raw, &ICM20602.gyro_x_raw);
-      SPI_Flag=DONE;
-      break;
-
-    case AxisGyroRaw:
-      parsing_3AxisGyroRawData(&ICM20602.gyro_x_raw);
-      SPI_Flag=DONE;
-      break;
-
-    case AxisAccRaw:
-      parsing_Get3AxisAccRawyData(&ICM20602.acc_x_raw);
-      SPI_Flag=DONE;
-      break;
-
-    default:
-      break;
-  }
+  ICM_Flag=DONE;
 }
 
 
 void ICM20602_Read6AxisRawData(void)
 {
-  SPI_Flag = Active;
+  ICM_Flag = Active;
   ICM20602_Readbytes(GYRO_XOUT_H, 6, Gyro_Data);
 }
 void ICM20602_Read3AxisGyroRawData(void)
 {
-  SPI_Flag = Active;
+  ICM_Flag = Active;
   ICM20602_Readbytes(GYRO_XOUT_H, 6, Gyro_Data);
 }
 void ICM20602_Read3AxisAccRawData(void)
 {
-  SPI_Flag = Active;
+  ICM_Flag = Active;
   ICM20602_Readbytes(ACCEL_XOUT_H, 6, ACC_Data);
 }
 

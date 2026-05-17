@@ -67,8 +67,10 @@
 
 
 #define  DEF_LPS22HH    DEF_HW_LPS22HH
-static SPI_DMA_STATE LPS22HH_Flag=IDLE;
-static void LPS22HH_RxFunc(void);
+static   SPI_DMA_STATE LPS22HH_Flag=IDLE;
+
+
+static   void LPS22HH_RxFunc(void);
 
 bool LPS22HH_Readbyte(uint8_t reg_addr, uint8_t* rx_data)
 {

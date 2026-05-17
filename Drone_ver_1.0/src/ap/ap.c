@@ -9,7 +9,7 @@
 #include "ap.h"
 
 LPS22HH_tbl_t LPS22HH;
-
+ICM20602_tbl_t ICM20602;
 void apInit(void)
 {
 
@@ -38,7 +38,7 @@ void apMain(void)
      // printf("hello \n");
       premillis=millis();
     }
-    ICM20602_GetInfo(AxisGyroRaw);
+    ICM20602_GetInfo(&ICM20602, AxisGyroRaw);
     LPS22HH_GetInfo(&LPS22HH,LPS22HH_GetPress);
   }
 }
