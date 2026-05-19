@@ -8,8 +8,10 @@
 
 #include "ap.h"
 
-LPS22HH_tbl_t LPS22HH;
-ICM20602_tbl_t ICM20602;
+//static BNO080_tbl BNO080;
+static LPS22HH_tbl_t LPS22HH;
+static ICM20602_tbl_t ICM20602;
+static BNO080_tbl BNO080;
 void apInit(void)
 {
 
@@ -21,13 +23,20 @@ void apInit(void)
 //  delay(1000);
     buzDeinit();
     timDeinit();
+
+    LPS22HH_Open(&LPS22HH);
+    ICM20602_Open(&ICM20602);
+    BNO080_Open(&BNO080);
+    BNO080_enableRotationVector(&BNO080, 2500);
 }
 
 
+int16_t roll_test;
+int16_t pitch_test;
+int16_t yaw_test;
 void apMain(void)
 {
   uint32_t premillis=0;
-  LPS22HH_Flush(&LPS22HH);
   while(1)
   {
     if(millis()-premillis>=500)
@@ -38,7 +47,13 @@ void apMain(void)
      // printf("hello \n");
       premillis=millis();
     }
-    ICM20602_GetInfo(&ICM20602, AxisGyroRaw);
     LPS22HH_GetInfo(&LPS22HH,LPS22HH_GetPress);
+    ICM20602_GetInfo(&ICM20602, AxisGyroRaw);
+
+
+    BNO080_ReadInfo(&BNO080);
+    roll_test = (100*BNO080.BNO080_Angle.Roll);
+    pitch_test = (100*BNO080.BNO080_Angle.Pitch);
+    yaw_test = (100*BNO080.BNO080_Angle.Yaw);
   }
 }

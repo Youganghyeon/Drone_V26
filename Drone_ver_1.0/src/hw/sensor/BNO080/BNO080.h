@@ -46,12 +46,88 @@
 #ifndef	_BNO080_H
 #define	_BNO080_H
 
-#include "main.h"
+#include "hw_def.h"
 //////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief Definition for connected to SPI2 (APB1 PCLK = 42MHz)
+ *
  */
+
+#define MAX_PACKET_SIZE 300 //Packets can be up to 32k but we don't have that much RAM.
+#define MAX_METADATA_SIZE 9 //This is in words. There can be many but we mostly only care about the first 9 (Qs, range, etc)
+
+typedef enum {
+  rawAccel  = 0,
+  rawLinAccel ,
+  rawGyro,
+  rawMag,
+  rawQuat
+}getMode_t;
+
+typedef enum{
+  QuatI = 0,
+  QuatJ ,
+  QuatK,
+  QuatReal,
+  QuatRadianAccuracy,
+  AccelX,
+  AccelY,
+  AccelZ,
+}getValue_t;
+
+//
+//#define  rawAccel     0
+//#define  rawLinAccel  1
+//#define  rawGyro      2
+//#define  rawMag       3
+//Global Variables
+typedef struct{
+  uint8_t shtpHeader[4]; //Each packet has a header of 4 bytes
+  uint8_t shtpData[MAX_PACKET_SIZE];
+  uint8_t sequenceNumber[6];
+  uint8_t commandSequenceNumber;        //Commands have a seqNum as well. These are inside command packet, the header uses its own seqNum per channel
+  uint32_t metaData[MAX_METADATA_SIZE];     //There is more than 10 words in a metadata record but we'll stop at Q point 3
+}BNO080_Packet_tbl;
+
+typedef struct{
+  uint16_t rawX;
+  uint16_t rawY;
+  uint16_t rawZ;
+  uint16_t accuracy;
+}BNO080_Raw_tbl;
+
+typedef struct{
+  uint16_t rawQuatI;
+  uint16_t rawQuatJ;
+  uint16_t rawQuatK;
+  uint16_t rawQuatReal;
+  uint16_t rawQuatRadianAccuracy;
+  uint16_t quatAccuracy;
+}BNO080_Quaternion_tbl;
+
+typedef struct{
+  float Roll;
+  float Pitch;
+  float Yaw;
+}BNO080_Angle_tbl;
+
+typedef struct{
+  BNO080_Raw_tbl        BNO080_Raw[4];
+  BNO080_Packet_tbl     BNO080_Packet;
+  BNO080_Quaternion_tbl BNO080_Quat;
+  BNO080_Angle_tbl      BNO080_Angle;
+  uint16_t              stepCount;
+  uint32_t              timeStamp;
+  uint8_t               stabilityClassifier;
+  uint8_t               activityClassifier;
+  uint8_t               activityConfidences[9]; //Array that store the confidences of the 9 possible activities
+  uint8_t               calibrationStatus;   //Byte R0 of ME Calibration Response
+}BNO080_tbl;
+
+
+
+#if 0
 #define BNO080_SPI_CHANNEL		SPI2
 
 #define BNO080_SPI_SCLK_PIN		LL_GPIO_PIN_13
@@ -65,33 +141,31 @@
 #define BNO080_SPI_MOSI_PIN		LL_GPIO_PIN_15
 #define BNO080_SPI_MOSI_PORT	GPIOB
 #define BNO080_SPI_MOSI_CLK		LL_AHB1_GRP1_PERIPH_GPIOB
-
-#define BNO080_SPI_CS_PIN		LL_GPIO_PIN_12
+#endif
+#define BNO080_SPI_CS_PIN		GPIO_PIN_12
 #define BNO080_SPI_CS_PORT		GPIOB
-#define BNO080_SPI_CS_CLK		LL_AHB1_GRP1_PERIPH_GPIOB
+#define BNO080_SPI_CS_CLK		AHB1_GRP1_PERIPH_GPIOB
 
-#define BNO080_PS0_WAKE_PIN		LL_GPIO_PIN_8
+#define BNO080_PS0_WAKE_PIN		GPIO_PIN_8
 #define BNO080_PS0_WAKE_PORT	GPIOA
-#define BNO080_PS0_WAKE_CLK		LL_AHB1_GRP1_PERIPH_GPIOA
+#define BNO080_PS0_WAKE_CLK		AHB1_GRP1_PERIPH_GPIOA
 
-#define BNO080_RST_PIN			LL_GPIO_PIN_9
+#define BNO080_RST_PIN			GPIO_PIN_9
 #define BNO080_RST_PORT			GPIOC
-#define BNO080_RST_CLK			LL_AHB1_GRP1_PERIPH_GPIOC
+#define BNO080_RST_CLK			AHB1_GRP1_PERIPH_GPIOC
 
-#define BNO080_INT_PIN			LL_GPIO_PIN_8
+#define BNO080_INT_PIN			GPIO_PIN_8
 #define BNO080_INT_PORT			GPIOC
-#define BNO080_INT_CLK			LL_AHB1_GRP1_PERIPH_GPIOC
+#define BNO080_INT_CLK			AHB1_GRP1_PERIPH_GPIOC
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
-#define CHIP_SELECT(BNO080)		LL_GPIO_ResetOutputPin(BNO080_SPI_CS_PORT, BNO080_SPI_CS_PIN)
-#define CHIP_DESELECT(BNO080)	LL_GPIO_SetOutputPin(BNO080_SPI_CS_PORT, BNO080_SPI_CS_PIN)
 
-#define WAKE_HIGH()				LL_GPIO_SetOutputPin(BNO080_PS0_WAKE_PORT, BNO080_PS0_WAKE_PIN)
-#define WAKE_LOW()				LL_GPIO_ResetOutputPin(BNO080_PS0_WAKE_PORT, BNO080_PS0_WAKE_PIN)
+#define WAKE_HIGH()				HAL_GPIO_WritePin(BNO080_PS0_WAKE_PORT, BNO080_PS0_WAKE_PIN,SET)
+#define WAKE_LOW()				HAL_GPIO_WritePin(BNO080_PS0_WAKE_PORT, BNO080_PS0_WAKE_PIN,RESET)
 
-#define RESET_HIGH()			LL_GPIO_SetOutputPin(BNO080_RST_PORT, BNO080_RST_PIN)
-#define RESET_LOW()				LL_GPIO_ResetOutputPin(BNO080_RST_PORT, BNO080_RST_PIN)
+#define RESET_HIGH()			HAL_GPIO_WritePin(BNO080_RST_PORT, BNO080_RST_PIN,SET)
+#define RESET_LOW()				HAL_GPIO_WritePin(BNO080_RST_PORT, BNO080_RST_PIN,RESET)
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
@@ -164,23 +238,30 @@ typedef enum{
  CALIBRATE_MAX
 }Calibrate_Mode_t;
 
-#define MAX_PACKET_SIZE 128 //Packets can be up to 32k but we don't have that much RAM.
-#define MAX_METADATA_SIZE 9 //This is in words. There can be many but we mostly only care about the first 9 (Qs, range, etc)
 
 void BNO080_GPIO_SPI_Initialization(void);
-int BNO080_Initialization(void);
-unsigned char SPI2_SendByte(unsigned char data);
-
-int BNO080_dataAvailable(void);
-void BNO080_parseCommandReport(void);
-void BNO080_parseInputReport(void);
-
-float BNO080_getQuatI();
-float BNO080_getQuatJ();
-float BNO080_getQuatK();
-float BNO080_getQuatReal();
-float BNO080_getQuatRadianAccuracy();
+bool BNO080_Init(void);
+bool BNO080_Open(BNO080_tbl* p_sensor);
+void BNO080_parseCommandReport(BNO080_tbl* p_sensor);
+void BNO080_parseInputReport(BNO080_tbl* p_sensor);
+//void BNO080_enableRotationVector(uint16_t timeBetweenReports);
+//void BNO080_enableGameRotationVector(BNO080_tbl* p_sensor, uint16_t timeBetweenReports);
+void BNO080_calibrateAll();
+void BNO080_enableMagnetometer(uint16_t timeBetweenReports);
+void BNO080_saveCalibration();
+void BNO080_requestCalibrationStatus();
+bool BNO080_calibrationComplete(BNO080_tbl* p_sensor);
+bool BNO080_waitForSPI();
+bool BNO080_receivePacket(BNO080_Packet_tbl* p_packet);
+bool BNO080_sendPacket(BNO080_Packet_tbl* p_packet, uint8_t channelNumber, uint8_t dataLength);
 uint8_t BNO080_getQuatAccuracy();
+uint8_t BNO080_getMagAccuracy();
+float BNO080_getValue(BNO080_tbl* p_sensor, getMode_t mode, getValue_t value);
+bool BNO080_ReadInfo(BNO080_tbl* p_sensor);
+bool BNO080_Update(float* q, BNO080_tbl* p_sensor);
+void BNO080_enableRotationVector(BNO080_tbl* p_sensor, uint16_t timeBetweenReports);
+#if 0
+
 float BNO080_getAccelX();
 float BNO080_getAccelY();
 float BNO080_getAccelZ();
@@ -214,13 +295,9 @@ void BNO080_softReset(void);
 uint8_t BNO080_resetReason();
 
 float BNO080_qToFloat(int16_t fixedPointValue, uint8_t qPoint);
-
-void BNO080_enableRotationVector(uint16_t timeBetweenReports);
-void BNO080_enableGameRotationVector(uint16_t timeBetweenReports);
 void BNO080_enableAccelerometer(uint16_t timeBetweenReports);
 void BNO080_enableLinearAccelerometer(uint16_t timeBetweenReports);
 void BNO080_enableGyro(uint16_t timeBetweenReports);
-void BNO080_enableMagnetometer(uint16_t timeBetweenReports);
 void BNO080_enableStepCounter(uint16_t timeBetweenReports);
 void BNO080_enableStabilityClassifier(uint16_t timeBetweenReports);
 
@@ -230,16 +307,10 @@ void BNO080_calibrateMagnetometer();
 void BNO080_calibratePlanarAccelerometer();
 void BNO080_calibrateAll();
 void BNO080_endCalibration();
-int BNO080_calibrationComplete();
 
-void BNO080_setFeatureCommand(uint8_t reportID, uint32_t microsBetweenReports, uint32_t specificConfig);
-void BNO080_sendCommand(uint8_t command);
-void BNO080_sendCalibrateCommand(uint8_t thingToCalibrate);
-void BNO080_requestCalibrationStatus();
+void BNO080_setFeatureCommand(BNO080_Packet_tbl* p_packet, uint8_t reportID, uint32_t microsBetweenReports, uint32_t specificConfig);
+void BNO080_sendCommand(BNO080_Packet_tbl* p_packet, uint8_t command);
+void BNO080_sendCalibrateCommand(BNO080_tbl* p_sensor, uint8_t thingToCalibrate);
 void BNO080_saveCalibration();
-
-int BNO080_waitForSPI(void);
-int BNO080_receivePacket(void);
-int BNO080_sendPacket(uint8_t channelNumber, uint8_t dataLength);
-
+#endif
 #endif

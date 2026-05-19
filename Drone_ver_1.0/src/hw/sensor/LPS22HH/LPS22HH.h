@@ -52,8 +52,6 @@ and indicates the Read (1) or Write (0) operation. The following 7 bits contain 
 #define LPS22HH_INT_CLK       AHB1_GRP1_PERIPH_GPIOB
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
-#define CHIP_SELECT(LPS22HH)        HAL_GPIO_WritePin(LPS22HH_SPI_CS_PORT, LPS22HH_SPI_CS_PIN, RESET)
-#define CHIP_DESELECT(LPS22HH)      HAL_GPIO_WritePin(LPS22HH_SPI_CS_PORT, LPS22HH_SPI_CS_PIN, SET)
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
@@ -66,9 +64,11 @@ typedef struct {
   int16_t temperature_raw;
   float baroAlt;
   float baroAltFilt;
+  bool isOpen;
 }LPS22HH_tbl_t;
 
 bool LPS22HH_Init(void);
+bool LPS22HH_Open(LPS22HH_tbl_t* p_sensor);
 bool LPS22HH_DataReady(void);
 uint8_t LPS22HH_State(void);
 bool   LPS22HH_GetInfo(LPS22HH_tbl_t* p_sensor, uint32_t mode);

@@ -32,6 +32,8 @@
 /**
  * @brief LPS22HH Register Map
  */
+#define CHIP_SELECT(LPS22HH)        HAL_GPIO_WritePin(LPS22HH_SPI_CS_PORT, LPS22HH_SPI_CS_PIN, RESET)
+#define CHIP_DESELECT(LPS22HH)      HAL_GPIO_WritePin(LPS22HH_SPI_CS_PORT, LPS22HH_SPI_CS_PIN, SET)
 
 #define INTERRUPT_CFG 0x0B
 #define THS_P_L     0x0C
@@ -118,10 +120,13 @@ void LPS22HH_Writebytes(unsigned char reg_addr, unsigned char len, unsigned char
   CHIP_DESELECT(LPS22HH);
 }
 */
-
-
-
 bool LPS22HH_Init(void)
+{
+ return true;
+}
+
+
+bool LPS22HH_Open(LPS22HH_tbl_t* p_sensor)
 {
   uint8_t temp_reg;
   uint8_t who_am_i = 0;
@@ -205,7 +210,8 @@ bool LPS22HH_Init(void)
   temp_reg = temp_reg | 0x04;
   LPS22HH_Writebyte(CTRL_REG3, &temp_reg);
 
-  return 0; //OK
+  p_sensor->isOpen=true;
+  return true; //OK
 }
 
 void LPS22HH_RxFunc(void)
@@ -215,7 +221,6 @@ void LPS22HH_RxFunc(void)
 }
 
 #define X 0.90f
-
 bool LPS22HH_GetInfo(LPS22HH_tbl_t* p_sensor, uint32_t mode)
 {
   if(LPS22HH_DataReady() == 1 &&(LPS22HH_Flag==IDLE))

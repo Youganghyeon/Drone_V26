@@ -33,10 +33,7 @@
 #define ICM20602_INT_CLK      AHB1_GRP1_PERIPH_GPIOC
 
 //////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
-#define chipSelect(ICM20602)     HAL_GPIO_WritePin(ICM20602_SPI_CS_PORT, ICM20602_SPI_CS_PIN,RESET)
-#define chipDeselect(ICM20602)   HAL_GPIO_WritePin(ICM20602_SPI_CS_PORT, ICM20602_SPI_CS_PIN,SET)
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
 /**
@@ -130,6 +127,7 @@ typedef struct _ICM20602{
   float gyro_x;
   float gyro_y;
   float gyro_z;
+  bool IsOpen;
 }ICM20602_tbl_t;
 
 typedef enum{
@@ -148,6 +146,8 @@ bool     ICM20602_Init(void);
 //void ICM20602_Get6AxisRawData(short* accel, short* gyro);
 //void ICM20602_Get3AxisGyroRawData(short* gyro);
 //void ICM20602_Get3AxisAccRawData(short* accel);
+bool     ICM20602_Open(ICM20602_tbl_t* p_sensor);
+
 bool     ICM20602_DataReady(void);
 void     ICM20602_Read6AxisRawData(void);
 void     ICM20602_Read3AxisGyroRawData(void);

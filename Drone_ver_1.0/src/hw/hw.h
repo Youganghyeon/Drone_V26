@@ -16,6 +16,7 @@
 #include "buzzer.h"
 #include "ICM20602/ICM20602.h"
 #include "LPS22HH/LPS22HH.h"
+#include "BNO080/BNO080.h"
 void hwInit(void);
 
 #endif /* SRC_HW_HW_H_ */

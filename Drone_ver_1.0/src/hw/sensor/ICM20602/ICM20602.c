@@ -16,6 +16,9 @@ static void     ICM20602_Readbytes(uint8_t reg_addr, uint8_t len, uint8_t* p_dat
 static void     ICM20602_Writebyte(uint8_t reg_addr, uint8_t val);
 static void     ICM20602_GpioInit(void);
 static void     ICM20602_RxFunc(void);
+#define chipSelect(ICM20602)     HAL_GPIO_WritePin(ICM20602_SPI_CS_PORT, ICM20602_SPI_CS_PIN,RESET)
+#define chipDeselect(ICM20602)   HAL_GPIO_WritePin(ICM20602_SPI_CS_PORT, ICM20602_SPI_CS_PIN,SET)
+
 
 //static int gyro_x_offset, gyro_y_offset, gyro_z_offset;
 static uint8_t Axis_Data[15];
@@ -81,8 +84,13 @@ void ICM20602_Writebytes(uint8_t reg_addr, uint8_t len, uint8_t* tx_data)
   CHIP_DESELECT(ICM20602);
 }
 #endif
-uint8_t who_am_i=0;
+
 bool ICM20602_Init(void)
+{
+  return true;
+}
+
+bool ICM20602_Open(ICM20602_tbl_t* p_sensor)
 {
   bool ret=false;
 //  int16_t accel_raw_data[3]={0};
@@ -96,8 +104,8 @@ bool ICM20602_Init(void)
   //printf("Checking ICM20602...");
 
   // check WHO_AM_I (0x75)
+  uint8_t who_am_i = 0;
   ICM20602_Readbyte(WHO_AM_I, &who_am_i);
-
   // who am i = 0x12
   if(who_am_i == 0x12)
   {
@@ -153,7 +161,9 @@ bool ICM20602_Init(void)
     // Remove Gyro Z offset
     ICM20602_Writebyte( ZG_OFFS_USRH, offset_z>>8 );  // gyro z offset high byte
     ICM20602_Writebyte( ZG_OFFS_USRL, offset_z ); // gyro z offset low byte
+
 */
+  p_sensor->IsOpen=true;
   return ret; //OK
 }
 
@@ -245,8 +255,15 @@ void parsing_Get3AxisAccRawyData(short* accel)
   accel[2] = (ACC_Data[5] << 8) | ACC_Data[6];
 }
 
+extern SPI_HandleTypeDef hspi1;
+
 void ICM20602_RxFunc(void)
 {
+  while (__HAL_SPI_GET_FLAG(&hspi1, SPI_FLAG_BSY))
+     {
+     }
+
+     __HAL_SPI_CLEAR_OVRFLAG(&hspi1);
   chipDeselect(ICM20602);
   ICM_Flag=DONE;
 }
