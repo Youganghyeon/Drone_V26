@@ -8,15 +8,19 @@
 
 #include "ap.h"
 
-//static BNO080_tbl BNO080;
+
 static LPS22HH_tbl_t LPS22HH;
 static ICM20602_tbl_t ICM20602;
 static BNO080_tbl BNO080;
+extern uint8_t ROHS_rxbuf[20];
+
+
 void apInit(void)
 {
 
   //uartOpen(DEF_UART4, 9600); //FC uart
     uartOpen(DEF_UART6, 9600); //PC uart
+    //uartOpen(DEF_UART1, 115200); // ROHS
 //  buzSetPitch(2000);
 //  delay(1000);
 //  buzSetPitch(1000);
@@ -30,10 +34,6 @@ void apInit(void)
     BNO080_enableRotationVector(&BNO080, 2500);
 }
 
-
-int16_t roll_test;
-int16_t pitch_test;
-int16_t yaw_test;
 void apMain(void)
 {
   uint32_t premillis=0;
@@ -44,16 +44,25 @@ void apMain(void)
       ledToggle(DEF_LED_1);
       ledToggle(DEF_LED_2);
       ledToggle(DEF_LED_3);
-     // printf("hello \n");
       premillis=millis();
     }
+
     LPS22HH_GetInfo(&LPS22HH,LPS22HH_GetPress);
+
     ICM20602_GetInfo(&ICM20602, AxisGyroRaw);
 
 
     BNO080_ReadInfo(&BNO080);
-    roll_test = (100*BNO080.BNO080_Angle.Roll);
-    pitch_test = (100*BNO080.BNO080_Angle.Pitch);
-    yaw_test = (100*BNO080.BNO080_Angle.Yaw);
+
+
+
+
+    /*
+     * rohsRead();
+     *
+     */
+
+
+
   }
 }
