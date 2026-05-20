@@ -1,0 +1,179 @@
+/*
+ * ICM20602.h
+ *
+ *  Created on: 2026. 2. 17.
+ *      Author: yougang
+ */
+
+#ifndef SRC_COMMON_HW_INCLUDE_ICM20602_H_
+#define SRC_COMMON_HW_INCLUDE_ICM20602_H_
+
+#include "hw_def.h"
+
+#define ICM20602_SPI_CHANNEL    SPI1
+
+#define ICM20602_SPI_SCLK_PIN   GPIO_PIN_5
+#define ICM20602_SPI_SCLK_PORT  GPIOA
+#define ICM20602_SPI_SCLK_CLK   LL_AHB1_GRP1_PERIPH_GPIOA
+
+#define ICM20602_SPI_MISO_PIN   GPIO_PIN_6
+#define ICM20602_SPI_MISO_PORT  GPIOA
+#define ICM20602_SPI_MISO_CLK   AHB1_GRP1_PERIPH_GPIOA
+
+#define ICM20602_SPI_MOSI_PIN   GPIO_PIN_7
+#define ICM20602_SPI_MOSI_PORT  GPIOA
+#define ICM20602_SPI_MOSI_CLK   AHB1_GRP1_PERIPH_GPIOA
+
+#define ICM20602_SPI_CS_PIN     GPIO_PIN_4
+#define ICM20602_SPI_CS_PORT    GPIOC
+#define ICM20602_SPI_CS_CLK     AHB1_GRP1_PERIPH_GPIOC
+
+#define ICM20602_INT_PIN      GPIO_PIN_5
+#define ICM20602_INT_PORT     GPIOC
+#define ICM20602_INT_CLK      AHB1_GRP1_PERIPH_GPIOC
+
+//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief ICM-20602 Register Map
+ */
+
+#define XG_OFFS_TC_H  0x04
+#define XG_OFFS_TC_L  0x05
+#define YG_OFFS_TC_H  0x07
+#define YG_OFFS_TC_L  0x08
+#define ZG_OFFS_TC_H  0x0A
+#define ZG_OFFS_TC_L  0x0B
+#define SELF_TEST_X_ACCEL 0x0D
+#define SELF_TEST_Y_ACCEL 0x0E
+#define SELF_TEST_Z_ACCEL 0x0F
+#define XG_OFFS_USRH  0x13
+#define XG_OFFS_USRL  0x14
+#define YG_OFFS_USRH  0x15
+#define YG_OFFS_USRL  0x16
+#define ZG_OFFS_USRH  0x17
+#define ZG_OFFS_USRL  0x18
+#define SMPLRT_DIV  0x19
+#define CONFIG  0x1A    //The default value of the register is 0x80.
+#define GYRO_CONFIG 0x1B
+#define ACCEL_CONFIG  0x1C
+#define ACCEL_CONFIG2 0x1D
+#define LP_MODE_CFG 0x1E
+#define ACCEL_WOM_X_THR 0x20
+#define ACCEL_WOM_Y_THR 0x21
+#define ACCEL_WOM_Z_THR 0x22
+#define FIFO_EN 0x23
+#define FSYNC_INT 0x36
+#define INT_PIN_CFG 0x37
+#define INT_ENABLE  0x38
+#define FIFO_WM_INT_STATUS  0x39
+
+#define INT_STATUS  0x3A
+#define ACCEL_XOUT_H  0x3B
+#define ACCEL_XOUT_L  0x3C
+#define ACCEL_YOUT_H  0x3D
+#define ACCEL_YOUT_L  0x3E
+#define ACCEL_ZOUT_H  0x3F
+#define ACCEL_ZOUT_L  0x40
+#define TEMP_OUT_H  0x41
+#define TEMP_OUT_L  0x42
+#define GYRO_XOUT_H 0x43
+#define GYRO_XOUT_L 0x44
+#define GYRO_YOUT_H 0x45
+#define GYRO_YOUT_L 0x46
+#define GYRO_ZOUT_H 0x47
+#define GYRO_ZOUT_L 0x48
+#define SELF_TEST_X_GYRO  0x50
+#define SELF_TEST_Y_GYRO  0x51
+#define SELF_TEST_Z_GYRO  0x52
+#define FIFO_WM_TH1 0x60
+#define FIFO_WM_TH2 0x61
+#define SIGNAL_PATH_RESET 0x68
+#define ACCEL_INTEL_CTRL  0x69
+#define USER_CTRL 0x6A
+#define PWR_MGMT_1  0x6B //The default value of the register is 0x41.
+#define PWR_MGMT_2  0x6C
+#define I2C_IF  0x70
+#define FIFO_COUNTH 0x72
+#define FIFO_COUNTL 0x73
+#define FIFO_R_W  0x74
+#define WHO_AM_I  0x75 //The default value of the register is 0x12.
+#define XA_OFFSET_H 0x77
+#define XA_OFFSET_L 0x78
+#define YA_OFFSET_H 0x7A
+#define YA_OFFSET_L 0x7B
+#define ZA_OFFSET_H 0x7D
+#define ZA_OFFSET_L 0x7E
+
+
+/**
+ * @brief ICM20602 structure definition.
+ */
+
+typedef struct
+{
+  uint8_t txBuf[30];
+}ICM20602_TxPacket_tbl;
+
+typedef struct
+{
+  uint8_t Axis_Data[15];
+  uint8_t Gyro_Data[15];
+  uint8_t ACC_Data[7];
+}ICM20602_RxPacket_tbl;
+typedef struct
+{
+  ICM20602_TxPacket_tbl ICM20602_TxPacket;
+  ICM20602_RxPacket_tbl ICM20602_RxPacket[2];
+  uint8_t  write_idx;
+  uint8_t  read_idx;
+}ICM20602_Buf_tbl;
+
+typedef struct
+{
+  short acc_x_raw;
+  short acc_y_raw;
+  short acc_z_raw;
+  short temperature_raw;
+  short gyro_x_raw;
+  short gyro_y_raw;
+  short gyro_z_raw;
+
+  float acc_x;
+  float acc_y;
+  float acc_z;
+  float gyro_x;
+  float gyro_y;
+  float gyro_z;
+
+  ICM20602_Buf_tbl ICM20602_Buf;
+  bool IsOpen;
+}ICM20602_tbl_t;
+
+typedef enum{
+  AxisRaw   = 3,
+  AxisGyroRaw,
+  AxisAccRaw
+} ICM_MODE_STATE;
+/**
+ * @brief ICM20602 structure definition.
+ */
+/**
+ * @brief ICM20602 function prototype definition.
+ */
+
+bool     ICM20602_Init(void);
+//void ICM20602_Get6AxisRawData(short* accel, short* gyro);
+//void ICM20602_Get3AxisGyroRawData(short* gyro);
+//void ICM20602_Get3AxisAccRawData(short* accel);
+bool     ICM20602_Open(ICM20602_tbl_t* p_sensor);
+
+bool     ICM20602_DataReady(void);
+void     parsing_6AxisRawData(short* accel, short* gyro, ICM20602_RxPacket_tbl* p_rx);
+void     parsing_3AxisGyroRawData(short* gyro, ICM20602_RxPacket_tbl* p_rx);
+void     parsing_Get3AxisAccRawData(short* accel, ICM20602_RxPacket_tbl* p_rx);
+bool     ICM20602_GetInfo(ICM20602_tbl_t* p_sensor, uint8_t state);
+
+#endif /* SRC_COMMON_HW_INCLUDE_ICM20602_H_ */
