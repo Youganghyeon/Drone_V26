@@ -281,6 +281,7 @@ bool BNO080_waitForSPI(void)
 //=============================================================================
 bool BNO080_receivePacket_DMA(BNO080_Packet_tbl* p_packet)
 {
+    bool ret=false;
     static uint8_t tx_dummy[MAX_PACKET_SIZE];
     uint8_t zero_dummy[4];
     memset(tx_dummy,   0xFF, MAX_PACKET_SIZE);
@@ -301,7 +302,16 @@ bool BNO080_receivePacket_DMA(BNO080_Packet_tbl* p_packet)
     dataLength -= 4;
 
     // 데이터 DMA 수신
-    return SPI_SendReceive_DMA(DEF_BNO080, &tx_dummy[0], &p_packet->shtpData[0], (uint16_t)dataLength);
+    if (dataLength >= MAX_PACKET_SIZE)
+    {
+      SPI_SendReceive_DMA(DEF_BNO080, &tx_dummy[0], &p_packet->shtpData[0], (uint16_t)MAX_PACKET_SIZE);
+    }
+    else if(dataLength < MAX_PACKET_SIZE)
+    {
+      SPI_SendReceive_DMA(DEF_BNO080, &tx_dummy[0], &p_packet->shtpData[0], (uint16_t)dataLength);
+      ret=true;
+    }
+    return ret;
 }
 
 //=============================================================================

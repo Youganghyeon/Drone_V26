@@ -19,18 +19,16 @@
 #define _USE_HW_BUZZER
 
 
-#define HW_UART_MAX_CH        3
 #define HW_LED_MAX            3
-
 #define HW_DEF_LED_1          0
 #define HW_DEF_LED_2          1
 #define HW_DEF_LED_3          2
 
+#define HW_UART_MAX_CH        4
 #define HW_DEF_UART1          0
 #define HW_DEF_UART4          1
-#define HW_DEF_UART6          2
-
-
+#define HW_DEF_UART5          2
+#define HW_DEF_UART6          3
 
 
 #define HW_PWM3_CH4           0

@@ -15,6 +15,7 @@
 #define UART_MAX_CH     HW_UART_MAX_CH
 #define DEF_UART1       HW_DEF_UART1
 #define DEF_UART4       HW_DEF_UART4
+#define DEF_UART5       HW_DEF_UART5
 #define DEF_UART6       HW_DEF_UART6
 
 bool        uartInit(void);

@@ -127,6 +127,9 @@ typedef struct _ICM20602{
   float gyro_x;
   float gyro_y;
   float gyro_z;
+
+  uint8_t  write_idx;
+  uint8_t  read_idx;
   bool IsOpen;
 }ICM20602_tbl_t;
 

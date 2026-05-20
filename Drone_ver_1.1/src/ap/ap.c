@@ -52,7 +52,6 @@ void apMain(void)
 
     ICM20602_GetInfo(&ICM20602, AxisGyroRaw);
 
-
     BNO080_ReadInfo(&BNO080);
 
 

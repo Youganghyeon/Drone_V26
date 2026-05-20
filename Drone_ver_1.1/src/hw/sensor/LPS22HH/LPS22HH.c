@@ -72,8 +72,8 @@
 static   SPI_DMA_STATE LPS22HH_Flag=IDLE;
 
 
-static   void LPS22HH_RxFunc(void);
-
+static  void LPS22HH_RxFunc(void);
+static  void LPS22HH_Readbytes(uint8_t reg_addr, uint8_t* rx_data, uint16_t len);
 bool LPS22HH_Readbyte(uint8_t reg_addr, uint8_t* rx_data)
 {
   bool ret=false;
@@ -86,6 +86,18 @@ bool LPS22HH_Readbyte(uint8_t reg_addr, uint8_t* rx_data)
   return ret;
 }
 
+void LPS22HH_Readbytes(uint8_t reg_addr, uint8_t* rx_data, uint16_t len)
+{
+  uint8_t rx_dummy = 0x00;
+  uint8_t dummy = 0x00;
+  uint8_t tx_data = (reg_addr | 0x80);
+  CHIP_SELECT(LPS22HH);
+  SPI_SendReceive(DEF_LPS22HH, &tx_data, &rx_dummy, 1); //Register. MSB 1 is read instruction.
+  SPI_SendReceive(DEF_LPS22HH, &dummy, rx_data, len);
+  CHIP_DESELECT(LPS22HH);
+}
+
+/*
 bool LPS22HH_Readbytes_DMA(uint8_t reg_addr, uint8_t* rx_data, uint16_t len)
 {
   bool ret=false;
@@ -96,6 +108,7 @@ bool LPS22HH_Readbytes_DMA(uint8_t reg_addr, uint8_t* rx_data, uint16_t len)
   ret=SPI_SendReceive_DMA(DEF_LPS22HH, &dummy, rx_data, len);
   return ret;
 }
+*/
 
 void LPS22HH_Writebyte(uint8_t reg_addr, uint8_t* val)
 {
@@ -107,19 +120,6 @@ void LPS22HH_Writebyte(uint8_t reg_addr, uint8_t* val)
   CHIP_DESELECT(LPS22HH);
 }
 
-/*
-void LPS22HH_Writebytes(unsigned char reg_addr, unsigned char len, unsigned char* data)
-{
-  unsigned int i = 0;
-  CHIP_SELECT(LPS22HH);
-  SPI3_SendByte(reg_addr & 0x7F); //Register. MSB 0 is write instruction.
-  while(i < len)
-  {
-    SPI3_SendByte(data[i++]); //Data
-  }
-  CHIP_DESELECT(LPS22HH);
-}
-*/
 bool LPS22HH_Init(void)
 {
  return true;
@@ -216,12 +216,11 @@ bool LPS22HH_Open(LPS22HH_tbl_t* p_sensor)
 
 void LPS22HH_RxFunc(void)
 {
-  LPS22HH_Flag = DONE;
-  CHIP_DESELECT(LPS22HH);
+
 }
 
 #define X 0.90f
-bool LPS22HH_GetInfo(LPS22HH_tbl_t* p_sensor, uint32_t mode)
+/*bool LPS22HH_GetInfo(LPS22HH_tbl_t* p_sensor, uint32_t mode)
 {
   if(LPS22HH_DataReady() == 1 &&(LPS22HH_Flag==IDLE))
   {
@@ -236,12 +235,27 @@ bool LPS22HH_GetInfo(LPS22HH_tbl_t* p_sensor, uint32_t mode)
          LPS22HH_Flag = Active;
      }
   }
-  if(LPS22HH_Flag==DONE)
+  *if(LPS22HH_Flag==DONE)
   {
     p_sensor->baroAlt = getAltitude2((p_sensor->pressure_raw)/4096.f, (p_sensor->temperature_raw)/100.f);
     p_sensor->baroAltFilt = (p_sensor->baroAltFilt) * X + (p_sensor->baroAlt) * (1.0f - X);
     LPS22HH_Flag = IDLE;
   }
+  return true;
+}*/
+
+bool LPS22HH_GetInfo(LPS22HH_tbl_t* p_sensor, uint32_t mode)
+{
+    switch(mode)
+     {
+       case LPS22HH_GetPress:
+         LPS22HH_Readbytes(PRESSURE_OUT_XL, (uint8_t*)&p_sensor->pressure_raw, 3);
+         break;
+       case LPS22HH_GetTemp:
+         LPS22HH_Readbytes(TEMP_OUT_L, (uint8_t*)&p_sensor->temperature_raw, 2);
+     }
+    p_sensor->baroAlt = getAltitude2((p_sensor->pressure_raw)/4096.f, (p_sensor->temperature_raw)/100.f);
+    p_sensor->baroAltFilt = (p_sensor->baroAltFilt) * X + (p_sensor->baroAlt) * (1.0f - X);
   return true;
 }
 

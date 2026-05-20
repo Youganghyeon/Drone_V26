@@ -93,21 +93,22 @@ bool ICM20602_Init(void)
 bool ICM20602_Open(ICM20602_tbl_t* p_sensor)
 {
   bool ret=false;
-//  int16_t accel_raw_data[3]={0};
- // int16_t gyro_raw_data[3]={0};
+  //  int16_t accel_raw_data[3]={0};
+  // int16_t gyro_raw_data[3]={0};
   chipDeselect(ICM20602);
   if(IsSpiInit(DEF_ICM20602) != true)
   {
     ICM20602_GpioInit();
   }
   spiRxCallbackRegister(DEF_ICM20602, ICM20602_RxFunc);
+
+  p_sensor->write_idx = 0;
+  p_sensor->read_idx = 1;
   //printf("Checking ICM20602...");
 
-  // check WHO_AM_I (0x75)
   uint8_t who_am_i = 0;
   ICM20602_Readbyte(WHO_AM_I, &who_am_i);
-  // who am i = 0x12
-  if(who_am_i == 0x12)
+  if(who_am_i == 0x12)  // who am i = 0x12
   {
     ret=true;
   }
@@ -117,39 +118,39 @@ bool ICM20602_Open(ICM20602_tbl_t* p_sensor)
     ICM20602_Readbyte(WHO_AM_I, &who_am_i); // check again WHO_AM_I (0x75)
 
     if (who_am_i != 0x12){
-    ret=false;
-   }
+      ret=false;
+    }
   }
- /*[Reset ICM20602] [PWR_MGMT_1 0x6B] [Reset ICM20602]*/
+  /*[Reset ICM20602] [PWR_MGMT_1 0x6B] [Reset ICM20602]*/
   ICM20602_Writebyte(PWR_MGMT_1, 0x80);
   HAL_Delay(50);
-/* [PWR_MGMT_1 0x6B] [Enable Temperature sensor(bit4-0), Use PLL(bit2:0-01)]
- * 온도센서 끄면 자이로 값 이상하게 출력됨 */
+  /* [PWR_MGMT_1 0x6B] [Enable Temperature sensor(bit4-0), Use PLL(bit2:0-01)]
+   * 온도센서 끄면 자이로 값 이상하게 출력됨 */
   ICM20602_Writebyte(PWR_MGMT_1, 0x01);
   HAL_Delay(50);
-/* [PWR_MGMT_2 0x6C] [Disable Acc(bit5:3-111), Enable Gyro(bit2:0-000)] */
+  /* [PWR_MGMT_2 0x6C] [Disable Acc(bit5:3-111), Enable Gyro(bit2:0-000)] */
   ICM20602_Writebyte(PWR_MGMT_2, 0x38);
   HAL_Delay(50);
-/*[set sample rate to 1000Hz and apply a software filter]*/
+  /*[set sample rate to 1000Hz and apply a software filter]*/
   ICM20602_Writebyte(SMPLRT_DIV, 0x00);
   HAL_Delay(50);
-/*[Gyro DLPF Config], [ICM20602_Writebyte(CONFIG, 0x00)] [Gyro LPF fc 250Hz(bit2:0-000)]*/
+  /*[Gyro DLPF Config], [ICM20602_Writebyte(CONFIG, 0x00)] [Gyro LPF fc 250Hz(bit2:0-000)]*/
   ICM20602_Writebyte(CONFIG, 0x05); // Gyro LPF fc 20Hz(bit2:0-100) at 1kHz sample rate
   HAL_Delay(50);
-    // GYRO_CONFIG 0x1B
+  // GYRO_CONFIG 0x1B
   ICM20602_Writebyte(GYRO_CONFIG, 0x18); // Gyro sensitivity 2000 dps(bit4:3-11), FCHOICE (bit1:0-00)
   HAL_Delay(50);
-    // ACCEL_CONFIG 0x1C
+  // ACCEL_CONFIG 0x1C
   ICM20602_Writebyte(ACCEL_CONFIG, 0x18); // Acc sensitivity 16g
   HAL_Delay(50);
-    // ACCEL_CONFIG2 0x1D
+  // ACCEL_CONFIG2 0x1D
   ICM20602_Writebyte(ACCEL_CONFIG2, 0x03); // Acc FCHOICE 1kHz(bit3-0), DLPF fc 44.8Hz(bit2:0-011)
   HAL_Delay(50);
-   // Enable Interrupts when data is ready
+  // Enable Interrupts when data is ready
   ICM20602_Writebyte(INT_ENABLE, 0x01); // Enable DRDY Interrupt
   HAL_Delay(50);
   //printf("gyro bias: %d %d %d\n", gyro_x_offset, gyro_y_offset, gyro_z_offset);
-/*
+  /*
     Remove Gyro X offset
     ICM20602_Writebyte( XG_OFFS_USRH, offset_x>>8 );  // gyro x offset high byte
     ICM20602_Writebyte( XG_OFFS_USRL, offset_x ); // gyro x offset low byte
@@ -161,8 +162,7 @@ bool ICM20602_Open(ICM20602_tbl_t* p_sensor)
     // Remove Gyro Z offset
     ICM20602_Writebyte( ZG_OFFS_USRH, offset_z>>8 );  // gyro z offset high byte
     ICM20602_Writebyte( ZG_OFFS_USRL, offset_z ); // gyro z offset low byte
-
-*/
+   */
   p_sensor->IsOpen=true;
   return ret; //OK
 }
@@ -171,6 +171,10 @@ bool ICM20602_GetInfo(ICM20602_tbl_t* p_sensor, uint8_t state)
 {
   bool ret=false;
   ICM_Mode=state;
+  if(p_sensor == NULL)
+  {
+    return false;
+  }
   if(ICM20602_DataReady()==1 && (ICM_Flag == IDLE))
   {
     switch(state)
@@ -260,10 +264,10 @@ extern SPI_HandleTypeDef hspi1;
 void ICM20602_RxFunc(void)
 {
   while (__HAL_SPI_GET_FLAG(&hspi1, SPI_FLAG_BSY))
-     {
-     }
+  {
+  }
 
-     __HAL_SPI_CLEAR_OVRFLAG(&hspi1);
+  __HAL_SPI_CLEAR_OVRFLAG(&hspi1);
   chipDeselect(ICM20602);
   ICM_Flag=DONE;
 }
