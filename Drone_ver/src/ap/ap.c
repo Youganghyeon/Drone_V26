@@ -33,11 +33,16 @@ void apInit(void)
 
     BNO080_Open(&BNO080);
     BNO080_enableRotationVector(&BNO080, 2500);
+
+    AT24C08_Open();
 }
 
+float p = 0.0, i = 0.0, d = 0.0;
 void apMain(void)
 {
   uint32_t premillis=0;
+
+  EP_PIDGain_Write(0, 1.1, 2.2, 3.3);
   while(1)
   {
     if(millis()-premillis>=500)
@@ -48,12 +53,12 @@ void apMain(void)
       premillis=millis();
     }
 
-    LPS22HH_GetInfo(&LPS22HH,LPS22HH_GetPress);
-
-    ICM20602_GetInfo(&ICM20602, AxisGyroRaw);
-
-    BNO080_ReadInfo(&BNO080);
-
+//    LPS22HH_GetInfo(&LPS22HH,LPS22HH_GetPress);
+//
+//    ICM20602_GetInfo(&ICM20602, AxisGyroRaw);
+//
+//    BNO080_ReadInfo(&BNO080);
+    EP_PIDGain_Read(0, &p, &i, &d);
 
 
 

@@ -18,7 +18,6 @@
 #define _USE_HW_TIM
 #define _USE_HW_BUZZER
 
-
 #define HW_LED_MAX            3
 #define HW_DEF_LED_1          0
 #define HW_DEF_LED_2          1
@@ -36,6 +35,10 @@
 #define HW_SPI_MAX_CH         3
 #define DEF_HW_ICM20602       0
 #define DEF_HW_BNO080         1
-#define DEF_HW_LPS22HH         2
+#define DEF_HW_LPS22HH        2
 
+
+
+#define HW_MAX_I2C_CH         1
+#define HW_DEF_I2C1           0
 #endif /* SRC_HW_HW_DEF_H_ */

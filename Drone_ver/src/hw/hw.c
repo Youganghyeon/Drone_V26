@@ -14,15 +14,18 @@ void hwInit(void)
   uartInit();
   ledInit();
   spiInit();
+  i2cInit();
  // timInit();
  // buzInit();
   spiOpen(DEF_HW_ICM20602);
   spiOpen(DEF_HW_LPS22HH);
   spiOpen(DEF_HW_BNO080);
+  i2cOpen(HW_DEF_I2C1);
 
   ICM20602_Init();
   LPS22HH_Init();
   BNO080_Init();
+  AT24C08_Init();
 
 //  rohsInit();
 }
