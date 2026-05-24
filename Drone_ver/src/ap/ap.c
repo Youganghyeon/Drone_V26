@@ -12,7 +12,15 @@
 static LPS22HH_tbl_t LPS22HH;
 static ICM20602_tbl_t ICM20602;
 static BNO080_tbl BNO080;
+static M8N_tbl    M8N;
 extern uint8_t ROHS_rxbuf[20];
+
+__attribute__((weak)) int _write(int file, char *ptr, int len)
+{
+  (void)file;
+  uartWrite(DEF_UART6, (uint8_t*)ptr, (uint32_t)len);
+  return len;
+}
 
 
 void apInit(void)
@@ -21,7 +29,8 @@ void apInit(void)
   //uartOpen(DEF_UART4, 9600); //FC uart
     uartOpen(DEF_UART6, 9600); //PC uart
     uartOpen(DEF_UART1, 115200); // ROHS
-//  buzSetPitch(2000);
+    uartOpen(DEF_UART4, 9600);
+    //  buzSetPitch(2000);
 //  delay(1000);
 //  buzSetPitch(1000);
 //  delay(1000);
@@ -35,19 +44,16 @@ void apInit(void)
     BNO080_enableRotationVector(&BNO080, 2500);
 
     AT24C08_Open();
+    M8N_Open();
 }
 
-float p = 0.0, i = 0.0, d = 0.0;
 void apMain(void)
 {
   uint32_t premillis=0;
-
-  EP_PIDGain_Write(0, 1.1, 2.2, 3.3);
   while(1)
   {
     if(millis()-premillis>=500)
     {
-      ledToggle(DEF_LED_1);
       ledToggle(DEF_LED_2);
       ledToggle(DEF_LED_3);
       premillis=millis();
@@ -58,9 +64,19 @@ void apMain(void)
 //    ICM20602_GetInfo(&ICM20602, AxisGyroRaw);
 //
 //    BNO080_ReadInfo(&BNO080);
-    EP_PIDGain_Read(0, &p, &i, &d);
+    M8N_ReceivePacket(&M8N);
+    if(M8N.RxBuf.m8n_cplt_flag== 1)
+    {
+      M8N.RxBuf.m8n_cplt_flag = 0;
 
+      if(MSN_UBX_CHKSUM_Check(&M8N.RxBuf.buf[0], 36) == 1)
+      {
+        ledToggle(DEF_LED_1);
+        M8N_Parsing(&M8N.RxBuf.buf[0], &M8N.posllh);
 
+        printf("LAT: %d\tLON: %d\t Height: %d\n", M8N.posllh.lat, M8N.posllh.lon, M8N.posllh.height);
+      }
+    }
 
     /*
      * rohsRead();

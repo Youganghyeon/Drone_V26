@@ -44,8 +44,8 @@ bool uartInit(void)
 }
 
 /* UART1:Telemetry
- * UART4:iBus
- * UART5:M8N
+ * UART5:iBus
+ * UART4:M8N
    UART6:PC
  */
 
@@ -84,6 +84,7 @@ bool uartOpen(uint8_t ch, uint32_t baud)
           qbuffer[ch].rx_out=qbuffer[ch].rx_in;
         }
       }
+      break;
     case DEF_UART4:
       huart4.Instance = UART4;
       huart4.Init.BaudRate = baud;
@@ -204,8 +205,21 @@ uint32_t uartWrite(uint8_t ch, uint8_t *buf, uint32_t length)
   HAL_StatusTypeDef status;
   switch(ch)
   {
+    case DEF_UART1:
+      status=HAL_UART_Transmit(&huart1, buf, length, 100);
+      if(status == HAL_OK)
+      {
+        ret=length;
+      }
     case DEF_UART4:
       status=HAL_UART_Transmit(&huart4, buf, length, 100);
+      if(status == HAL_OK)
+      {
+        ret=length;
+      }
+      break;
+    case DEF_UART5:
+      status=HAL_UART_Transmit(&huart5, buf, length, 100);
       if(status == HAL_OK)
       {
         ret=length;
@@ -242,6 +256,10 @@ uint32_t uartAvailable(uint8_t ch)
   uint32_t ret;
   switch(ch)
   {
+    case DEF_UART1:
+//      qbuffer[ch].rx_in=qbuffer[ch].len-hdma_uart1_rx.Instance->NDTR;
+      ret=qbufferAvailable(&qbuffer[ch]);
+      break;
     case DEF_UART4:
       qbuffer[ch].rx_in=qbuffer[ch].len-hdma_uart4_rx.Instance->NDTR;
       ret=qbufferAvailable(&qbuffer[ch]);
@@ -260,6 +278,9 @@ uint32_t GetBaud(uint8_t ch)
   uint32_t baud;
   switch(ch)
   {
+    case DEF_UART1:
+      baud= huart1.Init.BaudRate;
+      break;
     case DEF_UART4:
       baud= huart4.Init.BaudRate;
       break;

@@ -17,6 +17,9 @@
 #define _USE_HW_SPI
 #define _USE_HW_TIM
 #define _USE_HW_BUZZER
+#define _USE_HW_M8N
+
+
 
 #define HW_LED_MAX            3
 #define HW_DEF_LED_1          0
