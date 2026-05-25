@@ -52,8 +52,8 @@ bool ROHS_Read(ROHS_tbl* p_rohs)
 
 bool ROHS_Write(ROHS_tbl* p_rohs, uint8_t* tx_data, uint32_t length)
 {
-  bool ret=false;
-  ret = uartWrite(p_rohs->uartCh, tx_data, length);
+  bool ret= false;
+  ret = uartWrite_IT(p_rohs->uartCh, tx_data, length);
   return ret;
 }
 

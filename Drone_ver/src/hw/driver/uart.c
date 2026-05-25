@@ -56,13 +56,13 @@ bool uartOpen(uint8_t ch, uint32_t baud)
   {
     case DEF_UART1:
       huart1.Instance = USART1;
-      huart1.Init.BaudRate = baud;
-      huart1.Init.WordLength = UART_WORDLENGTH_8B;
-      huart1.Init.StopBits = UART_STOPBITS_1;
-      huart1.Init.Parity = UART_PARITY_NONE;
-      huart1.Init.Mode = UART_MODE_TX_RX;
-      huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-      huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+       huart1.Init.BaudRate = 115200;
+       huart1.Init.WordLength = UART_WORDLENGTH_8B;
+       huart1.Init.StopBits = UART_STOPBITS_1;
+       huart1.Init.Parity = UART_PARITY_NONE;
+       huart1.Init.Mode = UART_MODE_TX_RX;
+       huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+       huart1.Init.OverSampling = UART_OVERSAMPLING_16;
       HAL_UART_DeInit(&huart1);
 
       qbufferCreate(&qbuffer[ch], &uart1_rxbuf[0], 256);
@@ -237,6 +237,44 @@ uint32_t uartWrite(uint8_t ch, uint8_t *buf, uint32_t length)
   return ret;
 }
 
+uint32_t uartWrite_IT(uint8_t ch, uint8_t *buf, uint32_t length)
+{
+  uint32_t ret=0;
+  HAL_StatusTypeDef status;
+  switch(ch)
+  {
+    case DEF_UART1:
+      status=HAL_UART_Transmit_IT(&huart1, buf, length);
+      if(status == HAL_OK)
+      {
+        ret=length;
+      }
+      break;
+    case DEF_UART4:
+      status=HAL_UART_Transmit_IT(&huart4, buf, length);
+      if(status == HAL_OK)
+      {
+        ret=length;
+      }
+      break;
+    case DEF_UART5:
+      status=HAL_UART_Transmit_IT(&huart5, buf, length);
+      if(status == HAL_OK)
+      {
+        ret=length;
+      }
+      break;
+    case DEF_UART6:
+      status=HAL_UART_Transmit_IT(&huart6, buf, length);
+      if(status==HAL_OK)
+      {
+        ret=length;
+      }
+      break;
+  }
+  return ret;
+}
+
 uint32_t uartPrintf(uint8_t ch, const char* fmt,...)
 {
   uint32_t ret;
@@ -322,7 +360,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
   }
 }
-
 
 
 void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
@@ -465,6 +502,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 
     __HAL_LINKDMA(uartHandle,hdmarx,hdma_usart1_rx);
 
+    /* USART1 interrupt Init */
+    HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspInit 1 */
 
   /* USER CODE END USART1_MspInit 1 */
@@ -578,6 +618,9 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
     /* USART1 DMA DeInit */
     HAL_DMA_DeInit(uartHandle->hdmarx);
+
+    /* USART1 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspDeInit 1 */
 
   /* USER CODE END USART1_MspDeInit 1 */
@@ -603,8 +646,3 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
   /* USER CODE END USART6_MspDeInit 1 */
   }
 }
-
-/* USER CODE BEGIN 1 */
-
-/* USER CODE END 1 */
-
