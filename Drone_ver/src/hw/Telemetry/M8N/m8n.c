@@ -58,13 +58,13 @@ bool M8N_Open(void)
  {
    isInit=true;
  }
- M8N_Transmit((uint8_t*)&UBX_CFG_PRT[0],sizeof(UBX_CFG_PRT));
+ M8N_Write((uint8_t*)&UBX_CFG_PRT[0],sizeof(UBX_CFG_PRT));
  delay(100);
- M8N_Transmit((uint8_t*)&UBX_CFG_MSG[0],sizeof(UBX_CFG_MSG));
+ M8N_Write((uint8_t*)&UBX_CFG_MSG[0],sizeof(UBX_CFG_MSG));
  delay(100);
- M8N_Transmit((uint8_t*)&UBX_CFG_RATE[0],sizeof(UBX_CFG_RATE));
+ M8N_Write((uint8_t*)&UBX_CFG_RATE[0],sizeof(UBX_CFG_RATE));
  delay(100);
- M8N_Transmit((uint8_t*)&UBX_CFG_CFG[0],sizeof(UBX_CFG_CFG));
+ M8N_Write((uint8_t*)&UBX_CFG_CFG[0],sizeof(UBX_CFG_CFG));
  delay(100);
 
  isOpen=true;
@@ -72,12 +72,12 @@ bool M8N_Open(void)
 }
 
 
-bool M8N_Transmit(uint8_t *buf, uint32_t length)
+bool M8N_Write(uint8_t *buf, uint32_t length)
 {
   return uartWrite(DEF_M8N, buf ,length);
 }
 
-uint8_t M8N_Receive(void)
+uint8_t M8N_Read(void)
 {
   return uartRead(DEF_M8N);
 }
@@ -90,7 +90,7 @@ bool M8N_ReceivePacket(M8N_tbl* m8n)
   if(uartAvailable(DEF_M8N)>0)
   {
     uint8_t rx_data;
-    rx_data = M8N_Receive();
+    rx_data = M8N_Read();
     switch(cnt)
     {
       case 0:
@@ -141,7 +141,7 @@ bool M8N_Parsing(uint8_t * data, M8N_UBX_NAV_POSLLH* posllh)
   return true;
 }
 
-bool MSN_UBX_CHKSUM_Check(uint8_t* data, uint8_t len)
+bool M8N_Checksum_Check(uint8_t* data, uint8_t len)
 {
   bool ret;
   uint8_t CK_A =0;

@@ -74,6 +74,9 @@ static   SPI_DMA_STATE LPS22HH_Flag=IDLE;
 
 static  void LPS22HH_RxFunc(void);
 static  void LPS22HH_Readbytes(uint8_t reg_addr, uint8_t* rx_data, uint16_t len);
+static  float getAltitude1(float pressure);
+static  float getAltitude2(float pressure, float temperature);
+
 bool LPS22HH_Readbyte(uint8_t reg_addr, uint8_t* rx_data)
 {
   bool ret=false;
@@ -254,8 +257,6 @@ bool LPS22HH_GetInfo(LPS22HH_tbl_t* p_sensor, uint32_t mode)
        case LPS22HH_GetTemp:
          LPS22HH_Readbytes(TEMP_OUT_L, (uint8_t*)&p_sensor->temperature_raw, 2);
      }
-    p_sensor->baroAlt = getAltitude2((p_sensor->pressure_raw)/4096.f, (p_sensor->temperature_raw)/100.f);
-    p_sensor->baroAltFilt = (p_sensor->baroAltFilt) * X + (p_sensor->baroAlt) * (1.0f - X);
   return true;
 }
 
@@ -283,6 +284,30 @@ bool LPS22HH_Flush(LPS22HH_tbl_t* p_sensor)
   return true;
 }
 #define SEA_PRESSURE 1013.25f
+
+bool LPS22HH_GetAlt(LPS22HH_tbl_t* p_sensor, LPS22HH_GetALT_Mode mode)
+{
+  float pressure = ((p_sensor->pressure_raw)/4096.f);
+  float temperature = ((p_sensor->temperature_raw)/100.f);
+  switch(mode)
+  {
+    case NO_TEMP_CORRECT:
+      p_sensor->baroAlt = getAltitude1(pressure);
+     break;
+    case TEMP_CORRECT   :
+      p_sensor->baroAlt = getAltitude2(pressure, temperature);
+      break;
+    default:
+      break;
+  }
+  return true;
+}
+
+bool LPS22HH_GetAltFilt(LPS22HH_tbl_t* p_sensor)
+{
+  p_sensor->baroAltFilt = (p_sensor->baroAltFilt) * X + (p_sensor->baroAlt) * (1.0f - X);
+  return true;
+}
 
 float getAltitude1(float pressure) //No temperature correction.
 {

@@ -15,11 +15,8 @@
 
 static bool isInit = false;
 static bool isOpen = false;
-
 static bool AT24C08_PageWrite(uint8_t page, uint8_t* data, uint8_t len);
 static bool AT24C08_PageRead(uint8_t page, uint8_t* data, uint8_t len);
-
-
 typedef union{
   float f;
   uint8_t byte[4];

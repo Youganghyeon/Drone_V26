@@ -59,6 +59,11 @@ and indicates the Read (1) or Write (0) operation. The following 7 bits contain 
 #define LPS22HH_GetTemp        1
 #define LPS22HH_GetAll         2
 
+typedef enum{
+  NO_TEMP_CORRECT = 0,
+  TEMP_CORRECT       ,
+}LPS22HH_GetALT_Mode;
+
 typedef struct {
   int32_t pressure_raw;
   int16_t temperature_raw;
@@ -75,8 +80,9 @@ bool   LPS22HH_GetInfo(LPS22HH_tbl_t* p_sensor, uint32_t mode);
 bool LPS22HH_Flush(LPS22HH_tbl_t* p_sensor);
 void LPS22HH_GetPressure(int32_t* pressure);
 void LPS22HH_GetTemperature(int16_t* temperature);
-float getAltitude1(float pressure); //No temperature correction.
-float getAltitude2(float pressure, float temperature); //Get Altitude with temperature correction.
+bool LPS22HH_GetAlt(LPS22HH_tbl_t* p_sensor, LPS22HH_GetALT_Mode mode);
+bool LPS22HH_GetAltFilt(LPS22HH_tbl_t* p_sensor);
+
 
 
 #endif /* SRC_HW_SENSOR_LPS22H_LPS22HH_H_ */

@@ -15,6 +15,8 @@
 #include "tim.h"
 #include "buzzer.h"
 #include "i2c.h"
+
+#include "FS-iA6B/fs-ia6b.h"
 #include "M8N/m8n.h"
 #include "ICM20602/ICM20602.h"
 #include "LPS22HH/LPS22HH.h"

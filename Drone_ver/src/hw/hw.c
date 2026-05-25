@@ -18,8 +18,6 @@ void hwInit(void)
  // timInit();
  // buzInit();
 
-
-
   spiOpen(DEF_HW_ICM20602);
   spiOpen(DEF_HW_LPS22HH);
   spiOpen(DEF_HW_BNO080);
@@ -31,5 +29,6 @@ void hwInit(void)
   BNO080_Init();
   AT24C08_Init();
 
-//  rohsInit();
+
+  ROHS_Init();
 }

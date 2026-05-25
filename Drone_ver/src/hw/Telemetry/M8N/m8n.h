@@ -43,13 +43,13 @@ typedef struct M8N
   M8N_UBX_NAV_POSLLH posllh;
 }M8N_tbl;
 
-void M8N_Init(void);
-bool M8N_Open(void);
-bool M8N_Parsing(uint8_t * data, M8N_UBX_NAV_POSLLH* posllh);
-bool MSN_UBX_CHKSUM_Check(uint8_t* data, uint8_t len);
-bool M8N_ReceivePacket(M8N_tbl* m8n);
-bool M8N_Transmit(uint8_t *buf, uint32_t length);
-uint8_t M8N_Receive(void);
+void    M8N_Init(void);
+bool    M8N_Open(void);
+bool    M8N_Parsing(uint8_t * data, M8N_UBX_NAV_POSLLH* posllh);
+bool    M8N_Checksum_Check(uint8_t* data, uint8_t len);
+bool    M8N_ReceivePacket(M8N_tbl* m8n);
+bool    M8N_Write(uint8_t *buf, uint32_t length);
+uint8_t M8N_Read(void);
 #endif
 
 #endif /* SRC_HW_TELEMETRY_M8N_M8N_H_ */

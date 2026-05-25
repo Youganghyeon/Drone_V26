@@ -224,11 +224,15 @@ extern SPI_HandleTypeDef hspi1;
 
 void ICM20602_RxFunc(void)
 {
-  while(__HAL_SPI_GET_FLAG(&hspi1, SPI_FLAG_BSY)) {}
-  __HAL_SPI_CLEAR_OVRFLAG(&hspi1);
-  s_done_idx = s_sensor->ICM20602_Buf.write_idx;
-  chipDeselect(ICM20602);
-  ICM_Flag = DONE;
+  uint32_t timeout = 100000;  // ← BNO080처럼 timeout 추가
+    while(__HAL_SPI_GET_FLAG(&hspi1, SPI_FLAG_BSY))
+    {
+      if(timeout-- == 0) break;
+    }
+    __HAL_SPI_CLEAR_OVRFLAG(&hspi1);
+    s_done_idx = s_sensor->ICM20602_Buf.write_idx;
+    chipDeselect(ICM20602);
+    ICM_Flag = DONE;
 }
 
 void ICM20602_Read6AxisRawData(ICM20602_Buf_tbl* p_buf)

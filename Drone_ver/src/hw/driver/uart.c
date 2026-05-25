@@ -211,6 +211,7 @@ uint32_t uartWrite(uint8_t ch, uint8_t *buf, uint32_t length)
       {
         ret=length;
       }
+      break;
     case DEF_UART4:
       status=HAL_UART_Transmit(&huart4, buf, length, 100);
       if(status == HAL_OK)
@@ -257,14 +258,17 @@ uint32_t uartAvailable(uint8_t ch)
   switch(ch)
   {
     case DEF_UART1:
-//      qbuffer[ch].rx_in=qbuffer[ch].len-hdma_uart1_rx.Instance->NDTR;
+      qbuffer[ch].rx_in=qbuffer[ch].len-hdma_usart1_rx.Instance->NDTR;
       ret=qbufferAvailable(&qbuffer[ch]);
       break;
     case DEF_UART4:
       qbuffer[ch].rx_in=qbuffer[ch].len-hdma_uart4_rx.Instance->NDTR;
       ret=qbufferAvailable(&qbuffer[ch]);
       break;
-
+    case DEF_UART5:
+      qbuffer[ch].rx_in=qbuffer[ch].len-hdma_uart5_rx.Instance->NDTR;
+      ret=qbufferAvailable(&qbuffer[ch]);
+      break;
     case DEF_UART6:
       qbuffer[ch].rx_in=qbuffer[ch].len-hdma_usart6_rx.Instance->NDTR;
       ret=qbufferAvailable(&qbuffer[ch]);
@@ -283,6 +287,9 @@ uint32_t GetBaud(uint8_t ch)
       break;
     case DEF_UART4:
       baud= huart4.Init.BaudRate;
+      break;
+    case DEF_UART5:
+      baud= huart5.Init.BaudRate;
       break;
     case DEF_UART6:
       baud= huart6.Init.BaudRate;
