@@ -6,7 +6,7 @@
  */
 
 
-#include "msg.h"
+#include "Servicemsg.h"
 #include "FS-iA6B/fs-ia6b.h"
 #include "M8N/m8n.h"
 #include "ICM20602/ICM20602.h"
@@ -15,33 +15,34 @@
 #include "ROHS/rohs.h"
 #include "AT24C08.h"
 
+
 typedef struct{
   bool             isOpen;
   uint8_t          channel;
   Service_MsgType  MsgType;
-  ROHS_tbl         Rohs;
+  ROHS_tbl*        Rohs;
 }Service_Msg_tbl;
+
 
 Service_Msg_tbl Service_msg;
 
-void ServiceMsg_Open(void)
+void ServiceMsg_Init(void)
 {
-  Service_msg.isOpen = true;
-  Service_msg.MsgType = NONE;
 }
 
-bool IsServiceOpen(void)
+bool ServiceMsg_Open(void)
 {
-  return Service_msg.isOpen;
+  bool ret=true;
+  Service_msg.isOpen=true;
+  return ret;
 }
 
 void EncodeMsg_AHRS(ROHS_tbl* p_rohs, BNO080_tbl* p_bno, LPS22HH_tbl_t* p_lps)
 {
-  Service_msg.channel = p_rohs->uartCh;
   BNO080_Angle_tbl* p_bno_angle = &p_bno->BNO080_Angle;
   p_rohs->txBuf[0] = 0x46;
-  p_rohs->txBuf[0] = 0x43;
-  p_rohs->txBuf[0] = 0x10;
+  p_rohs->txBuf[1] = 0x43;
+  p_rohs->txBuf[2] = AHRS_MSG;
 
   p_rohs->txBuf[3] = (short)(p_bno_angle->Roll*100);
   p_rohs->txBuf[4] = ((short)(p_bno_angle->Roll*100))>>8;
@@ -81,7 +82,7 @@ void MsgEncode_GPS(ROHS_tbl* p_rohs, M8N_tbl* p_m8n)
   p_rohs->txBuf[0] = 0x46;
   p_rohs->txBuf[1] = 0x43;
 
-  p_rohs->txBuf[2] = 0x11;
+  p_rohs->txBuf[2] = GPS_MSG;
 
   p_rohs->txBuf[3] = p_poslh->lat;
   p_rohs->txBuf[4] = p_poslh->lat>>8;
@@ -135,5 +136,8 @@ void MsgEncode_PID_Gain(ROHS_tbl* p_rohs, uint8_t id, float p, float i, float d)
 
   p_rohs->txBuf[19] = 0xff;
 
-  for(int i=0;i<19;i++)  p_rohs->txBuf[19] =  p_rohs->txBuf[19] -  p_rohs->txBuf[i];
+  for(int i=0;i<19;i++)
+  {
+    p_rohs->txBuf[19] =  p_rohs->txBuf[19] -  p_rohs->txBuf[i];
+  }
 }

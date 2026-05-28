@@ -10,6 +10,10 @@
 
 #include "hw_def.h"
 
+#define     SW_A      0
+#define     SW_B      1
+#define     SW_C      2
+#define     SW_D      3
 
 typedef struct
 {
@@ -17,12 +21,13 @@ typedef struct
   uint16_t RV; //Right Vertical
   uint16_t LV; //Left Vertical
   uint16_t LH; //Left Horizontal
-  uint16_t SwA;
-  uint16_t SwB;
-  uint16_t SwC;
-  uint16_t SwD;
+  uint16_t SW[4];
   uint16_t VrA;
   uint16_t VrB;
+
+  uint8_t rxBuf[32];
+  uint16_t checksum;
+  bool    ibus_rx_cplt_flag;
 
   uint8_t FailSafe;
   bool    isOpen;
@@ -31,6 +36,8 @@ typedef struct
 
 void FSIA6B_Init(void);
 bool FSIA6B_Open(FSiA6B_tbl* p_iBus);
-bool iBus_Check_CHKSUM(uint8_t* data, uint8_t len);
-
+void FSIA6B_Parsing(FSiA6B_tbl* iBus);
+bool FSIA6B_Check_checkSum(FSiA6B_tbl* iBus, uint8_t len);
+bool FSIA6B_RecivePacket(FSiA6B_tbl* iBus);
+bool FSIA6B_isFailsafe(FSiA6B_tbl* iBus);
 #endif /* SRC_HW_TELEMETRY_FS_IA6B_FS_IA6B_H_ */

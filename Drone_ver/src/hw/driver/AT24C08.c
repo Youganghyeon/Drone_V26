@@ -140,34 +140,19 @@ void EP_PIDGain_Write(uint8_t id, float PGain, float IGain, float DGain)
   }
 }
 
-bool EP_PIDGain_Read(uint8_t id, float* PGain, float* IGain, float* DGain)
+bool EP_PIDGain_Read(PID_Angle id, float* PGain, float* IGain, float* DGain)
 {
   unsigned char buf_read[16];
   Parser parser;
-
-  switch(id)
+  if(id==PID_All)
   {
-  case 0:
-    AT24C08_PageRead(0, &buf_read[0], 16);
-    break;
-  case 1:
-    AT24C08_PageRead(1, &buf_read[0], 16);
-    break;
-  case 2:
-    AT24C08_PageRead(2, &buf_read[0], 16);
-    break;
-  case 3:
-    AT24C08_PageRead(3, &buf_read[0], 16);
-    break;
-  case 4:
-    AT24C08_PageRead(4, &buf_read[0], 16);
-    break;
-  case 5:
-    AT24C08_PageRead(5, &buf_read[0], 16);
-    break;
+    for(int i=0; i<id; i++)
+    {
+      AT24C08_PageRead((uint8_t)i, &buf_read[0], 16);
+    }
   }
-
-  unsigned char chksum = 0xff;
+  AT24C08_PageRead((uint8_t)id, &buf_read[0], 16);
+  uint8_t chksum = 0xff;
   for(int i=0;i<15;i++) chksum -= buf_read[i];
 
   if(buf_read[15] == chksum && buf_read[0] == 0x45 && buf_read[1] == 0x50)

@@ -12,7 +12,6 @@
 //#define   DEF_ROHS_UART     DEF_UART1
 #define   DEF_ROHS_BAUD     115200
 
-
 void ROHS_Init(void)
 {
 }

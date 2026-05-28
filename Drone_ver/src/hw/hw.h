@@ -23,6 +23,7 @@
 #include "BNO080/BNO080.h"
 #include "ROHS/rohs.h"
 #include "AT24C08.h"
+//#include "service/Servicemsg.h"
 void hwInit(void);
 
 #endif /* SRC_HW_HW_H_ */

@@ -9,11 +9,12 @@
 #include "ap.h"
 
 
-static LPS22HH_tbl_t LPS22HH;
+static LPS22HH_tbl_t  LPS22HH;
 static ICM20602_tbl_t ICM20602;
-static BNO080_tbl BNO080;
-static M8N_tbl    M8N;
-static ROHS_tbl   ROHS;
+static BNO080_tbl     BNO080;
+static M8N_tbl        M8N;
+static ROHS_tbl       ROHS;
+static FSiA6B_tbl     IA6B;
 
 __attribute__((weak)) int _write(int file, char *ptr, int len)
 {
@@ -22,14 +23,13 @@ __attribute__((weak)) int _write(int file, char *ptr, int len)
   return len;
 }
 
-void EncodeMsg_AHRS(ROHS_tbl* p_rohs, BNO080_tbl* p_bno, LPS22HH_tbl_t* p_lps);
+static void EncodeMsg_AHRS(ROHS_tbl* p_rohs, BNO080_tbl* p_bno, LPS22HH_tbl_t* p_lps, FSiA6B_tbl* p_iBus);
 
 void apInit(void)
 {
 
-  uartOpen(DEF_UART5, 115200);    //FSi6AB uart
   uartOpen(DEF_UART1, 115200);  // ROHS
-  uartOpen(DEF_UART4, 9600);    // GPS uart
+  uartOpen(DEF_UART5, 115200);    //FSi6AB uart
   uartOpen(DEF_UART6, 9600);    //PC uart
   //  buzSetPitch(2000);
   //  delay(1000);
@@ -40,6 +40,7 @@ void apInit(void)
 
   M8N_Open();
   ROHS_Open(&ROHS, DEF_UART1);
+  FSIA6B_Open(&IA6B);
 
   LPS22HH_Open(&LPS22HH);
   ICM20602_Open(&ICM20602);
@@ -47,6 +48,8 @@ void apInit(void)
   BNO080_enableRotationVector(&BNO080, 2500);
 
   AT24C08_Open();
+
+ // bool EP_PIDGain_Read(PID_All,
 
 }
 
@@ -89,15 +92,30 @@ void apMain(void)
     if(millis()-premillis_ROHS>=20)
     {
       //ROHS_Read();
-      EncodeMsg_AHRS(&ROHS, &BNO080, &LPS22HH);
+      EncodeMsg_AHRS(&ROHS, &BNO080, &LPS22HH, &IA6B);
       ROHS_Write(&ROHS,&ROHS.txBuf[0],20);
       premillis_ROHS=millis();
     }
 
-    /*
-     * rohsRead();
-     *
-     */
+    FSIA6B_RecivePacket(&IA6B);
+    if(IA6B.ibus_rx_cplt_flag == 1)
+    {
+      IA6B.ibus_rx_cplt_flag = 0;
+      if(FSIA6B_Check_checkSum(&IA6B, 32) == 1)
+      {
+        FSIA6B_Parsing(&IA6B);
+        if(FSIA6B_isFailsafe(&IA6B) == 1)
+        {
+        //  LL_TIM_CC_EnableChannel(TIM3, LL_TIM_CHANNEL_CH4);
+        }
+        else
+        {
+      //    LL_TIM_CC_DisableChannel(TIM3, LL_TIM_CHANNEL_CH4);
+        }
+      }
+    }
+
+
 
 
 
@@ -105,33 +123,33 @@ void apMain(void)
 }
 
 
-void EncodeMsg_AHRS(ROHS_tbl* p_rohs, BNO080_tbl* p_bno, LPS22HH_tbl_t* p_lps)
+static void EncodeMsg_AHRS(ROHS_tbl* p_rohs, BNO080_tbl* p_bno, LPS22HH_tbl_t* p_lps, FSiA6B_tbl* p_iBus)
 {
   BNO080_Angle_tbl* p_bno_angle = &p_bno->BNO080_Angle;
   p_rohs->txBuf[0] = 0x46;
   p_rohs->txBuf[1] = 0x43;
   p_rohs->txBuf[2] = 0x10;
 
-  p_rohs->txBuf[3] = (short)(p_bno_angle->Roll*100);
-  p_rohs->txBuf[4] = ((short)(p_bno_angle->Roll*100))>>8;
+  p_rohs->txBuf[3] = (int16_t)(p_bno_angle->Roll*100);
+  p_rohs->txBuf[4] = ((int16_t)(p_bno_angle->Roll*100))>>8;
 
-  p_rohs->txBuf[5] = (short)(p_bno_angle->Roll*100);
-  p_rohs->txBuf[6] = ((short)(p_bno_angle->Roll*100))>>8;
+  p_rohs->txBuf[5] = (int16_t)(p_bno_angle->Pitch*100);
+  p_rohs->txBuf[6] = ((int16_t)(p_bno_angle->Pitch*100))>>8;
 
-  p_rohs->txBuf[7] = (unsigned short)(p_bno_angle->Yaw*100);
-  p_rohs->txBuf[8] = ((unsigned short)(p_bno_angle->Yaw*100))>>8;
+  p_rohs->txBuf[7] = (uint16_t)(p_bno_angle->Yaw*100);
+  p_rohs->txBuf[8] = ((uint16_t)(p_bno_angle->Yaw*100))>>8;
 
-  p_rohs->txBuf[9] =  (short)(p_lps->baroAltFilt*10);
-  p_rohs->txBuf[10] = ((short)(p_lps->baroAltFilt*10))>>8;
+  p_rohs->txBuf[9] =  (int16_t)(p_lps->baroAltFilt*10);
+  p_rohs->txBuf[10] = ((int16_t)(p_lps->baroAltFilt*10))>>8;
 
-  p_rohs->txBuf[11] = 0;//(short)((iBus.RH-1500)*0.1f*100);
-  p_rohs->txBuf[12] = 0;//((short)((iBus.RH-1500)*0.1f*100))>>8;
+  p_rohs->txBuf[11] = (int16_t)((p_iBus->RH-1500)*0.1f*100);
+  p_rohs->txBuf[12] = ((int16_t)((p_iBus->RH-1500)*0.1f*100))>>8;
 
-  p_rohs->txBuf[13] = 0;//(short)((iBus.RV-1500)*0.1f*100);
-  p_rohs->txBuf[14] = 0;//((short)((iBus.RV-1500)*0.1f*100))>>8;
+  p_rohs->txBuf[13] = (int16_t)((p_iBus->RV-1500)*0.1f*100);
+  p_rohs->txBuf[14] = ((int16_t)((p_iBus->RV-1500)*0.1f*100))>>8;
 
-  p_rohs->txBuf[15] = 0;//(unsigned short)((iBus.LH-1000)*0.36f*100);
-  p_rohs->txBuf[16] = 0;//((unsigned short)((iBus.LH-1000)*0.36f*100))>>8;
+  p_rohs->txBuf[15] = (uint16_t)((p_iBus->LH-1000)*0.36f*100);
+  p_rohs->txBuf[16] = ((uint16_t)((p_iBus->LH-1000)*0.36f*100))>>8;
 
   p_rohs->txBuf[17] = 0x00;
   p_rohs->txBuf[18] = 0x00;

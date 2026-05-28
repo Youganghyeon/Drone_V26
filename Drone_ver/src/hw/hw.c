@@ -24,11 +24,12 @@ void hwInit(void)
   i2cOpen(HW_DEF_I2C1);
 
   M8N_Init();
+  FSIA6B_Init();
+  ROHS_Init();
+
   ICM20602_Init();
   LPS22HH_Init();
   BNO080_Init();
   AT24C08_Init();
 
-
-  ROHS_Init();
 }
