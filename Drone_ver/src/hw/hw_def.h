@@ -32,15 +32,17 @@
 #define HW_DEF_UART5          2
 #define HW_DEF_UART6          3
 
-
-#define HW_PWM3_CH4           0
+#define HW_TIM_MAX_CH         2
+#define HW_DEF_TIM3_CH4       0
+#define HW_DEF_TIM7_TIMER     1
 
 #define HW_SPI_MAX_CH         3
 #define DEF_HW_ICM20602       0
 #define DEF_HW_BNO080         1
 #define DEF_HW_LPS22HH        2
 
-
+#define HW_ADC_MAX_CH         1
+#define HW_DEF_ADC1           0
 
 #define HW_MAX_I2C_CH         1
 #define HW_DEF_I2C1           0

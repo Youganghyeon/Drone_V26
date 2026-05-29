@@ -27,6 +27,6 @@ bool buzSetPitch(uint32_t pitch)
 bool buzDeinit(void)
 {
   bool ret=true;
-  pwmStop(PWM3_CH4);
+  pwmStop(DEF_BUZZER);
   return ret;
 }

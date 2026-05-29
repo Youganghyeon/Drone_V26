@@ -12,14 +12,19 @@
 
 #ifdef _USE_HW_TIM
 
-#define PWM3_CH4           HW_PWM3_CH4
+#define TIM_MAX_CH         HW_TIM_MAX_CH
+#define DEF_TIM3_CH4       HW_DEF_TIM3_CH4
+#define DEF_TIM7_TIMER     HW_DEF_TIM7_TIMER
 
-bool timInit(void);
+
+void timInit(void);
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle);
 bool pwmStart(uint8_t ch);
 bool pwmPsc(uint8_t ch, uint32_t psc);
 bool pwmStop(uint8_t ch);
-bool timDeinit(void);
+bool timDeinit(uint32_t ch);
+bool Is1msFlag(uint8_t ch);
+bool clear1msFlag(uint8_t ch);
 #endif
 
 

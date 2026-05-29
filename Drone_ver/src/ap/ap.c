@@ -36,7 +36,7 @@ void apInit(void)
   //  buzSetPitch(1000);
   //  delay(1000);
   buzDeinit();
-  timDeinit();
+  timDeinit(DEF_TIM3_CH4);
 
   M8N_Open();
   ROHS_Open(&ROHS, DEF_UART1);
