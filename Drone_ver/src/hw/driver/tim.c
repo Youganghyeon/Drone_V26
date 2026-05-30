@@ -111,6 +111,7 @@ bool timOpen(uint8_t ch)
         Error_Handler();
       }
       p_tim->isOpen= true;
+      HAL_TIM_Base_Start_IT(p_handle);
       break;
   }
 
@@ -199,6 +200,21 @@ bool Is1msFlag(uint8_t ch)
   return ret;
 }
 
+bool Is20msFlag(uint8_t ch)
+{
+  bool ret = false;
+  TIMER_Flag* p_flag = &TIM_tbl[ch].timerFlag;
+  if(ch == DEF_TIM7_TIMER)
+  {
+    if(p_flag->Flag_20ms == true)
+    {
+      ret= true;
+    }
+  }
+  return ret;
+}
+
+
 
 bool clear1msFlag(uint8_t ch)
 {
@@ -210,7 +226,17 @@ bool clear1msFlag(uint8_t ch)
    return false;
 }
 
-__weak void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+bool clear20msFlag(uint8_t ch)
+{
+  TIMER_Flag* p_flag = &TIM_tbl[ch].timerFlag;
+   if(ch == DEF_TIM7_TIMER)
+   {
+     p_flag->Flag_20ms = false;
+   }
+   return false;
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* Prevent unused argument(s) compilation warning */
   if(htim->Instance == TIM_tbl[DEF_TIM7_TIMER].htim->Instance)

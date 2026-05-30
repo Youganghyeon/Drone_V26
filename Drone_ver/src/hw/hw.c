@@ -15,8 +15,8 @@ void hwInit(void)
   ledInit();
   spiInit();
   i2cInit();
- // timInit();
- // buzInit();
+  timInit();
+  adcInit();
 
   spiOpen(DEF_HW_ICM20602);
   spiOpen(DEF_HW_LPS22HH);
@@ -31,5 +31,6 @@ void hwInit(void)
   LPS22HH_Init();
   BNO080_Init();
   AT24C08_Init();
+  // buzInit();
 
 }

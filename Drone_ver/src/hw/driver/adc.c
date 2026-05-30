@@ -70,7 +70,7 @@ bool adcOpen(uint8_t ch)
       }
       sConfig.Channel = ADC_CHANNEL_8;
       sConfig.Rank = 1;
-      sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+      sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
       if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
       {
         ret= false;
@@ -84,7 +84,7 @@ bool adcOpen(uint8_t ch)
     return ret;
 }
 
-uint32_t adcReceive(uint8_t ch, uint32_t* des_buf, uint32_t length)
+uint32_t adcReceive(uint8_t ch)
 {
   uint32_t adcVal=0;
   switch(ch)

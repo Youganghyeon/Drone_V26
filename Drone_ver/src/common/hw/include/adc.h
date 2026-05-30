@@ -16,7 +16,7 @@
 
 void     adcInit(void);
 bool     adcOpen(uint8_t ch);
-uint32_t adcReceive(uint8_t ch, uint32_t* des_buf, uint32_t length);
+uint32_t adcReceive(uint8_t ch);
 bool     adcReceive_DMA(uint8_t ch, uint32_t* des_buf, uint32_t length);
 
 #endif /* SRC_COMMON_HW_INCLUDE_ADC_H_ */

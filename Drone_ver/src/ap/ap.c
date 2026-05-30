@@ -31,12 +31,13 @@ void apInit(void)
   uartOpen(DEF_UART1, 115200);  // ROHS
   uartOpen(DEF_UART5, 115200);    //FSi6AB uart
   uartOpen(DEF_UART6, 9600);    //PC uart
+  timOpen(DEF_TIM7_TIMER);
+  adcOpen(DEF_ADC1);
   //  buzSetPitch(2000);
   //  delay(1000);
   //  buzSetPitch(1000);
   //  delay(1000);
   buzDeinit();
-  timDeinit(DEF_TIM3_CH4);
 
   M8N_Open();
   ROHS_Open(&ROHS, DEF_UART1);
@@ -53,11 +54,13 @@ void apInit(void)
 
 }
 
+float    BatVolt=0.0;
+uint16_t adcVolt=0;
 
 void apMain(void)
 {
   uint32_t premillis=0;
-  uint32_t premillis_ROHS=millis();
+  adcReceive_DMA(DEF_ADC1, (uint32_t*)&adcVolt, 1);
   while(1)
   {
     if(millis()-premillis>=500)
@@ -89,14 +92,6 @@ void apMain(void)
       }
     }
 
-    if(millis()-premillis_ROHS>=20)
-    {
-      //ROHS_Read();
-      EncodeMsg_AHRS(&ROHS, &BNO080, &LPS22HH, &IA6B);
-      ROHS_Write(&ROHS,&ROHS.txBuf[0],20);
-      premillis_ROHS=millis();
-    }
-
     FSIA6B_RecivePacket(&IA6B);
     if(IA6B.ibus_rx_cplt_flag == 1)
     {
@@ -106,19 +101,26 @@ void apMain(void)
         FSIA6B_Parsing(&IA6B);
         if(FSIA6B_isFailsafe(&IA6B) == 1)
         {
-        //  LL_TIM_CC_EnableChannel(TIM3, LL_TIM_CHANNEL_CH4);
+
         }
         else
         {
-      //    LL_TIM_CC_DisableChannel(TIM3, LL_TIM_CHANNEL_CH4);
+
         }
       }
     }
 
+    if(Is20msFlag(DEF_TIM7_TIMER)==1)
+    {
+
+      //ROHS_Read();
+      EncodeMsg_AHRS(&ROHS, &BNO080, &LPS22HH, &IA6B);
+      ROHS_Write(&ROHS,&ROHS.txBuf[0],20);
+      clear20msFlag(DEF_TIM7_TIMER);
+    }
 
 
-
-
+    BatVolt = adcVolt * 0.003619f;
   }
 }
 
