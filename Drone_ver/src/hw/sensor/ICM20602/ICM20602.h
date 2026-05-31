@@ -126,9 +126,7 @@ typedef struct
 typedef struct
 {
   ICM20602_TxPacket_tbl ICM20602_TxPacket;
-  ICM20602_RxPacket_tbl ICM20602_RxPacket[2];
-  uint8_t  write_idx;
-  uint8_t  read_idx;
+  ICM20602_RxPacket_tbl ICM20602_RxPacket;
 }ICM20602_Buf_tbl;
 
 typedef struct

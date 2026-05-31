@@ -22,8 +22,6 @@ static void  ICM20602_Read3AxisAccRawData(ICM20602_Buf_tbl* p_buf);
 #define chipSelect(ICM20602)    HAL_GPIO_WritePin(ICM20602_SPI_CS_PORT, ICM20602_SPI_CS_PIN, RESET)
 #define chipDeselect(ICM20602)  HAL_GPIO_WritePin(ICM20602_SPI_CS_PORT, ICM20602_SPI_CS_PIN, SET)
 
-static volatile uint8_t s_done_idx = 0;
-static ICM20602_tbl_t*  s_sensor   = NULL;
 static volatile uint8_t data_ready_flag = 0;
 ICM_MODE_STATE ICM_Mode = AxisGyroRaw;
 SPI_DMA_STATE  ICM_Flag = IDLE;
@@ -55,7 +53,7 @@ void ICM20602_Readbytes_DMA(ICM20602_Buf_tbl* p_buf, uint8_t reg_addr, uint8_t l
   if(len > 30) return;
 
   ICM20602_TxPacket_tbl* p_tx = &p_buf->ICM20602_TxPacket;
-  ICM20602_RxPacket_tbl* p_rx = &p_buf->ICM20602_RxPacket[0];//p_buf->write_idx];
+  ICM20602_RxPacket_tbl* p_rx = &p_buf->ICM20602_RxPacket;
 
   uint8_t* p_rxTarget;
   switch(type)
@@ -91,17 +89,12 @@ bool ICM20602_Init(void)
 bool ICM20602_Open(ICM20602_tbl_t* p_sensor)
 {
   bool ret = false;
-  ICM20602_Buf_tbl* p_buf = &p_sensor->ICM20602_Buf;
-
   chipDeselect(ICM20602);
   if(IsSpiInit(DEF_ICM20602) != true)
   {
     ICM20602_GpioInit();
   }
   spiRxCallbackRegister(DEF_ICM20602, ICM20602_RxFunc);
-  s_sensor         = p_sensor;
-  p_buf->write_idx = 0;
-  p_buf->read_idx  = 1;
 
   uint8_t who_am_i = 0;
   ICM20602_Readbyte(WHO_AM_I, &who_am_i);
@@ -205,7 +198,7 @@ bool ICM20602_GetInfo(ICM20602_tbl_t* p_sensor, uint8_t state)
   ICM_Mode = state;
   bool isDataReady = ICM20602_DataReady();
   ICM20602_Buf_tbl* p_buf = &p_sensor->ICM20602_Buf;
-  ICM20602_RxPacket_tbl* p_rx = &p_buf->ICM20602_RxPacket[0];
+  ICM20602_RxPacket_tbl* p_rx = &p_buf->ICM20602_RxPacket;
   if(ICM_Flag == IDLE && isDataReady)
   {
     switch(state)
@@ -285,7 +278,6 @@ void ICM20602_RxFunc(void)
       if(timeout-- == 0) break;
     }
     __HAL_SPI_CLEAR_OVRFLAG(&hspi1);
-    s_done_idx = s_sensor->ICM20602_Buf.write_idx;
     chipDeselect(ICM20602);
     ICM_Flag = DONE;
 }

@@ -114,11 +114,9 @@ typedef struct{
 
 typedef struct{
   BNO080_Raw_tbl        BNO080_Raw[4];
-  BNO080_Packet_tbl     BNO080_Packet[2];
+  BNO080_Packet_tbl     BNO080_Packet;
   BNO080_Quaternion_tbl BNO080_Quat;
   BNO080_Angle_tbl      BNO080_Angle;
-  volatile uint8_t      write_idx;
-  volatile uint8_t      read_idx;
   uint16_t              stepCount;
   uint32_t              timeStamp;
   uint8_t               stabilityClassifier;

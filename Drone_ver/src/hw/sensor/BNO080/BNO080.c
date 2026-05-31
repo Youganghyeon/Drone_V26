@@ -56,9 +56,6 @@ static int16_t accelerometer_Q1     = 8;
 static int16_t linear_accelerometer_Q1 = 8;
 static int16_t gyro_Q1              = 9;
 static int16_t magnetometer_Q1      = 4;
-static volatile uint8_t s_done_idx = 0;
-// 콜백에서 접근하기 위한 static 포인터
-static BNO080_tbl* s_sensor = NULL;
 volatile SPI_DMA_STATE BNO080_Flag = IDLE;
 
 extern SPI_HandleTypeDef hspi2;
@@ -91,16 +88,9 @@ bool BNO080_Init(void)
 bool BNO080_Open(BNO080_tbl* p_sensor)
 {
     bool ret = false;
-
-    // static 포인터에 저장 (콜백에서 사용)
-    s_sensor = p_sensor;
-
-    // 더블버퍼 idx 초기화
-    p_sensor->write_idx = 0;
-    p_sensor->read_idx  = 1;
     BNO080_Flag = IDLE;
 
-    BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet[p_sensor->write_idx];
+    BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet;
 
     spiRxCallbackRegister(DEF_BNO080, BNO080_RxFunc);
 
@@ -150,10 +140,10 @@ bool BNO080_ReadInfo(BNO080_tbl* p_sensor)
     bool ret = false;
     if(p_sensor == NULL) return false;
 
+
     if(BNO080_Flag == IDLE && BNO080_DataReady())
     {
-      //HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11,GPIO_PIN_SET);
-        BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet[0];  // [0] 고정
+        BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet;  // [0] 고정
         if(BNO080_receivePacket_DMA(p_packet) != true)
         {
             CHIP_DESELECT(BNO080);
@@ -164,8 +154,7 @@ bool BNO080_ReadInfo(BNO080_tbl* p_sensor)
 
     if(BNO080_Flag == DONE)
     {
-    //  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_10);
-        BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet[0];  // [0] 고정
+        BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet;  // [0] 고정
 
         if(p_packet->shtpHeader[2] == CHANNEL_REPORTS &&
            p_packet->shtpData[0]   == SHTP_REPORT_BASE_TIMESTAMP)
@@ -188,7 +177,6 @@ bool BNO080_ReadInfo(BNO080_tbl* p_sensor)
             q[3] = BNO080_getValue(p_sensor, rawQuat, QuatReal);
             BNO080_Update(&q[0], p_sensor);
         }
-       // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11,GPIO_PIN_RESET);
         BNO080_Flag = IDLE;
     }
 
@@ -213,13 +201,6 @@ void BNO080_RxFunc(void)
   __HAL_SPI_CLEAR_OVRFLAG(&hspi2);
 
   CHIP_DESELECT(BNO080);
-
-  // 방금 DMA가 끝난 버퍼 번호 저장
-  if(s_sensor != NULL)
-  {
-    s_done_idx = s_sensor->write_idx;
-  }
-
   BNO080_Flag = DONE;
 }
 //=============================================================================
@@ -354,7 +335,7 @@ bool BNO080_sendPacket(BNO080_Packet_tbl* p_packet, uint8_t channelNumber, uint8
 //=============================================================================
 void BNO080_parseInputReport(BNO080_tbl* p_sensor)
 {
-    BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet[0];//p_sensor->read_idx];
+    BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet;//p_sensor->read_idx];
 
     int16_t dataLength = ((uint16_t)p_packet->shtpHeader[1] << 8 | p_packet->shtpHeader[0]);
     dataLength &= ~(1 << 15);
@@ -452,7 +433,7 @@ void BNO080_parseInputReport(BNO080_tbl* p_sensor)
 //=============================================================================
 void BNO080_parseCommandReport(BNO080_tbl* p_sensor)
 {
-    BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet[0];//p_sensor->read_idx];
+    BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet;//p_sensor->read_idx];
 
     if(p_packet->shtpData[0] == SHTP_REPORT_COMMAND_RESPONSE)
     {
@@ -547,7 +528,7 @@ bool BNO080_Update(float* q, BNO080_tbl* p_sensor)
 //=============================================================================
 void BNO080_enableRotationVector(BNO080_tbl* p_sensor, uint16_t timeBetweenReports)
 {
-    BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet[p_sensor->write_idx];
+    BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet;
     BNO080_setFeatureCommand(p_packet, SENSOR_REPORTID_ROTATION_VECTOR, timeBetweenReports, 0);
 }
 
