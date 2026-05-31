@@ -69,6 +69,7 @@ void Error_Handler(void);
 #define ICM_CS_GPIO_Port GPIOC
 #define ICM_INT_Pin GPIO_PIN_5
 #define ICM_INT_GPIO_Port GPIOC
+#define ICM_INT_EXTI_IRQn EXTI9_5_IRQn
 #define BNO_CS_Pin GPIO_PIN_12
 #define BNO_CS_GPIO_Port GPIOB
 #define DEBUG_TX_Pin GPIO_PIN_6

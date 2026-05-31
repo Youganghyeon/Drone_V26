@@ -143,63 +143,29 @@ bool BNO080_Open(BNO080_tbl* p_sensor)
 //=============================================================================
 // ReadInfo - 더블버퍼 DMA
 //=============================================================================
+
 bool BNO080_ReadInfo(BNO080_tbl* p_sensor)
 {
+
     bool ret = false;
+    if(p_sensor == NULL) return false;
 
-    if(p_sensor == NULL)
+    if(BNO080_Flag == IDLE && BNO080_DataReady())
     {
-        return false;
-    }
-
-    // 1. 처음 시작: IDLE이고 데이터가 있으면 현재 write_idx 버퍼에 DMA 시작
-    if((BNO080_Flag == IDLE) && (BNO080_DataReady() == true))
-    {
-        BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet[p_sensor->write_idx];
-
+      //HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11,GPIO_PIN_SET);
+        BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet[0];  // [0] 고정
         if(BNO080_receivePacket_DMA(p_packet) != true)
         {
-            BNO080_Flag = IDLE;
             CHIP_DESELECT(BNO080);
             return false;
         }
-
         BNO080_Flag = Active;
-        return false;
     }
 
-    // 2. DMA 완료: 다음 DMA를 먼저 시작하고, 완료된 버퍼는 그동안 파싱
     if(BNO080_Flag == DONE)
     {
-        uint8_t parse_idx = s_done_idx;
-
-        // 다음 DMA는 반대쪽 버퍼에 받는다
-        p_sensor->write_idx = parse_idx ^ 1;
-        p_sensor->read_idx  = parse_idx;
-
-        // 다음 패킷이 이미 준비되어 있으면 즉시 다음 DMA 시작
-        if(BNO080_DataReady() == true)
-        {
-            BNO080_Packet_tbl* p_next = &p_sensor->BNO080_Packet[p_sensor->write_idx];
-
-            if(BNO080_receivePacket_DMA(p_next) == true)
-            {
-                BNO080_Flag = Active;
-            }
-            else
-            {
-                BNO080_Flag = IDLE;
-                CHIP_DESELECT(BNO080);
-            }
-        }
-        else
-        {
-            BNO080_Flag = IDLE;
-        }
-
-        // 여기서부터는 parse_idx 버퍼 분석
-        // 만약 위에서 다음 DMA가 시작됐다면, 지금 SPI는 돌고 있고 CPU는 파싱 중
-        BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet[p_sensor->read_idx];
+    //  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_10);
+        BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet[0];  // [0] 고정
 
         if(p_packet->shtpHeader[2] == CHANNEL_REPORTS &&
            p_packet->shtpData[0]   == SHTP_REPORT_BASE_TIMESTAMP)
@@ -216,14 +182,14 @@ bool BNO080_ReadInfo(BNO080_tbl* p_sensor)
         if(ret == true)
         {
             float q[4];
-
             q[0] = BNO080_getValue(p_sensor, rawQuat, QuatI);
             q[1] = BNO080_getValue(p_sensor, rawQuat, QuatJ);
             q[2] = BNO080_getValue(p_sensor, rawQuat, QuatK);
             q[3] = BNO080_getValue(p_sensor, rawQuat, QuatReal);
-
             BNO080_Update(&q[0], p_sensor);
         }
+       // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11,GPIO_PIN_RESET);
+        BNO080_Flag = IDLE;
     }
 
     return ret;
@@ -388,7 +354,7 @@ bool BNO080_sendPacket(BNO080_Packet_tbl* p_packet, uint8_t channelNumber, uint8
 //=============================================================================
 void BNO080_parseInputReport(BNO080_tbl* p_sensor)
 {
-    BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet[p_sensor->read_idx];
+    BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet[0];//p_sensor->read_idx];
 
     int16_t dataLength = ((uint16_t)p_packet->shtpHeader[1] << 8 | p_packet->shtpHeader[0]);
     dataLength &= ~(1 << 15);
@@ -486,7 +452,7 @@ void BNO080_parseInputReport(BNO080_tbl* p_sensor)
 //=============================================================================
 void BNO080_parseCommandReport(BNO080_tbl* p_sensor)
 {
-    BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet[p_sensor->read_idx];
+    BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet[0];//p_sensor->read_idx];
 
     if(p_packet->shtpData[0] == SHTP_REPORT_COMMAND_RESPONSE)
     {

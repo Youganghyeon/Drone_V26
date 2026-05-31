@@ -24,6 +24,7 @@ static void  ICM20602_Read3AxisAccRawData(ICM20602_Buf_tbl* p_buf);
 
 static volatile uint8_t s_done_idx = 0;
 static ICM20602_tbl_t*  s_sensor   = NULL;
+static volatile uint8_t data_ready_flag = 0;
 ICM_MODE_STATE ICM_Mode = AxisGyroRaw;
 SPI_DMA_STATE  ICM_Flag = IDLE;
 
@@ -54,7 +55,7 @@ void ICM20602_Readbytes_DMA(ICM20602_Buf_tbl* p_buf, uint8_t reg_addr, uint8_t l
   if(len > 30) return;
 
   ICM20602_TxPacket_tbl* p_tx = &p_buf->ICM20602_TxPacket;
-  ICM20602_RxPacket_tbl* p_rx = &p_buf->ICM20602_RxPacket[p_buf->write_idx];
+  ICM20602_RxPacket_tbl* p_rx = &p_buf->ICM20602_RxPacket[0];//p_buf->write_idx];
 
   uint8_t* p_rxTarget;
   switch(type)
@@ -133,6 +134,7 @@ bool ICM20602_Open(ICM20602_tbl_t* p_sensor)
   return ret;
 }
 
+/*
 bool ICM20602_GetInfo(ICM20602_tbl_t* p_sensor, uint8_t state)
 {
   bool ret = false;
@@ -140,8 +142,9 @@ bool ICM20602_GetInfo(ICM20602_tbl_t* p_sensor, uint8_t state)
 
   ICM_Mode = state;
   ICM20602_Buf_tbl* p_buf = &p_sensor->ICM20602_Buf;
+  bool isDataReady = ICM20602_DataReady();
 
-  if(ICM20602_DataReady() == 1 && ICM_Flag == IDLE)
+  if(isDataReady== 1 && ICM_Flag == IDLE)
   {
     switch(state)
     {
@@ -153,13 +156,15 @@ bool ICM20602_GetInfo(ICM20602_tbl_t* p_sensor, uint8_t state)
   }
   else if(ICM_Flag == DONE)
   {
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
     uint8_t parse_idx    = s_done_idx;
     p_buf->write_idx     = parse_idx ^ 1;
     p_buf->read_idx      = parse_idx;
 
     // 다음 DMA 먼저 시작 (반대쪽 버퍼에)
-    if(ICM20602_DataReady() == 1)
+    if(isDataReady == 1)
     {
+      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_11);
       switch(state)
       {
         case AxisRaw:     ICM20602_Read6AxisRawData(p_buf);     ret = true; break;
@@ -187,13 +192,63 @@ bool ICM20602_GetInfo(ICM20602_tbl_t* p_sensor, uint8_t state)
         parsing_Get3AxisAccRawData(&p_sensor->acc_x_raw, p_rx);
         break;
     }
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
   }
+  return ret;
+}
+*/
+bool ICM20602_GetInfo(ICM20602_tbl_t* p_sensor, uint8_t state)
+{
+  bool ret = false;
+  if(p_sensor == NULL) return false;
+
+  ICM_Mode = state;
+  bool isDataReady = ICM20602_DataReady();
+  ICM20602_Buf_tbl* p_buf = &p_sensor->ICM20602_Buf;
+  ICM20602_RxPacket_tbl* p_rx = &p_buf->ICM20602_RxPacket[0];
+  if(ICM_Flag == IDLE && isDataReady)
+  {
+    switch(state)
+    {
+      case AxisRaw:     ICM20602_Read6AxisRawData(p_buf);     break;
+      case AxisGyroRaw: ICM20602_Read3AxisGyroRawData(p_buf); break;
+      case AxisAccRaw:  ICM20602_Read3AxisAccRawData(p_buf);  break;
+      default: break;
+    }
+  }
+
+  if(ICM_Flag == DONE)
+  {
+    switch(state)
+    {
+      case AxisRaw:
+        parsing_6AxisRawData(&p_sensor->acc_x_raw, &p_sensor->gyro_x_raw,p_rx);
+        break;
+      case AxisGyroRaw:
+        parsing_3AxisGyroRawData(&p_sensor->gyro_x_raw, p_rx);
+        p_sensor->gyro_x = p_sensor->gyro_x_raw * 2000.f / 32768.f;
+        p_sensor->gyro_y = p_sensor->gyro_y_raw * 2000.f / 32768.f;
+        p_sensor->gyro_z = p_sensor->gyro_z_raw * 2000.f / 32768.f;
+        break;
+      case AxisAccRaw:
+        parsing_Get3AxisAccRawData(&p_sensor->acc_x_raw,p_rx);
+        break;
+    }
+    ICM_Flag = IDLE;
+    ret = true;
+  }
+
   return ret;
 }
 
 bool ICM20602_DataReady(void)
 {
-  return (HAL_GPIO_ReadPin(ICM20602_INT_PORT, ICM20602_INT_PIN) == GPIO_PIN_SET);
+  if(data_ready_flag)
+  {
+    data_ready_flag = 0;
+    return true;
+  }
+  return false;
 }
 
 void parsing_6AxisRawData(short* accel, short* gyro, ICM20602_RxPacket_tbl* p_rx)
@@ -251,4 +306,13 @@ void ICM20602_Read3AxisAccRawData(ICM20602_Buf_tbl* p_buf)
 {
   ICM_Flag = Active;
   ICM20602_Readbytes_DMA(p_buf, ACCEL_XOUT_H, 6, AxisAccRaw);
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  /* Prevent unused argument(s) compilation warning */
+  if(GPIO_Pin == ICM_INT_Pin)
+  {
+    data_ready_flag = 1;
+  }
 }
