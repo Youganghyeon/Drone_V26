@@ -11,6 +11,7 @@
 
 #include "hw_def.h"
 
+#ifdef _USE_HW_ROHS
 typedef enum{
   ROHS_Header_H =0x00,
   ROHS_Header_L,
@@ -38,3 +39,4 @@ bool ROHS_Read(ROHS_tbl* p_rohs);
 bool ROHS_Write(ROHS_tbl* p_rohs, uint8_t* tx_data, uint32_t length);
 bool ROHS_Parsing(ROHS_tbl* p_rohs, uint8_t cmd);
 #endif /* SRC_HW_TELEMETRY_ROHS_ROHS_H_ */
+#endif

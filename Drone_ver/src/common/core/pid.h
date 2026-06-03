@@ -10,6 +10,7 @@
 
 #include "def.h"
 
+#ifdef _USE_PID
 typedef struct{
   float kp;
   float ki;
@@ -36,5 +37,5 @@ Single_PID_tbl inner;   //angular velceity
 Single_PID_tbl outer;   // angle
 }Double_PID_tbl;
 
-
+#endif
 #endif /* SRC_COMMON_CORE_PID_H_ */

@@ -8,6 +8,8 @@
 
 #include "led.h"
 
+#ifdef _USE_HW_LED
+
 typedef struct {
   GPIO_TypeDef* GPIO_Port;
   uint16_t      GPIO_Pin;
@@ -53,3 +55,4 @@ bool ledToggle(uint8_t ch)
   return ret;
 }
 
+#endif

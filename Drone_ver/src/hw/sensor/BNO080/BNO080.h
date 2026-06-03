@@ -48,7 +48,7 @@
 
 #include "hw_def.h"
 //////////////////////////////////////////////////////////////////////////
-
+#ifdef _USE_HW_BNO080
 /**
  * @brief Definition for connected to SPI2 (APB1 PCLK = 42MHz)
  *
@@ -312,5 +312,6 @@ void BNO080_setFeatureCommand(BNO080_Packet_tbl* p_packet, uint8_t reportID, uin
 void BNO080_sendCommand(BNO080_Packet_tbl* p_packet, uint8_t command);
 void BNO080_sendCalibrateCommand(BNO080_tbl* p_sensor, uint8_t thingToCalibrate);
 void BNO080_saveCalibration();
+#endif
 #endif
 #endif

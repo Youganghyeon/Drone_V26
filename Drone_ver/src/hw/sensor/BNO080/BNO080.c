@@ -47,6 +47,7 @@
 #include "spi.h"
 #include "Quaternion.h"
 
+#ifdef _USE_HW_BNO080
 #define DEF_BNO080  DEF_HW_BNO080
 #define CHIP_SELECT(BNO080)   HAL_GPIO_WritePin(BNO080_SPI_CS_PORT, BNO080_SPI_CS_PIN, RESET)
 #define CHIP_DESELECT(BNO080) HAL_GPIO_WritePin(BNO080_SPI_CS_PORT, BNO080_SPI_CS_PIN, SET)
@@ -1036,4 +1037,5 @@ bool BNO080_calibrateSet(BNO080_tbl* p_sensor, Calibrate_Mode_t mode)
 }
 #endif
 
+#endif
 #endif

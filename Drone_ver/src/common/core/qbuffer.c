@@ -6,6 +6,7 @@
  */
 #include "qbuffer.h"
 
+#ifdef _USE_QBUFFER
 bool qbufferInit(void)
 {
   bool ret=true;
@@ -80,3 +81,4 @@ bool qbufferflush(qbuffer_t *p_node)
   p_node->rx_out=0;
   return true;
 }
+#endif

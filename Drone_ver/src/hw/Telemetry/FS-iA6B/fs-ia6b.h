@@ -9,7 +9,7 @@
 #define SRC_HW_TELEMETRY_FS_IA6B_FS_IA6B_H_
 
 #include "hw_def.h"
-
+#ifdef _USE_HW_FSIA6B
 #define     SW_A      0
 #define     SW_B      1
 #define     SW_C      2
@@ -41,3 +41,4 @@ bool FSIA6B_Check_checkSum(FSiA6B_tbl* iBus, uint8_t len);
 bool FSIA6B_RecivePacket(FSiA6B_tbl* iBus);
 bool FSIA6B_isFailsafe(FSiA6B_tbl* iBus);
 #endif /* SRC_HW_TELEMETRY_FS_IA6B_FS_IA6B_H_ */
+#endif

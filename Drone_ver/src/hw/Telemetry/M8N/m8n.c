@@ -7,7 +7,7 @@
 #include "m8n.h"
 #include "uart.h"
 //UART5
-
+#ifdef _USE_HW_M8N
 #define DEF_M8N   DEF_UART4
 #define M8N_Baudrate 115200
 
@@ -156,3 +156,4 @@ bool M8N_Checksum_Check(uint8_t* data, uint8_t len)
   return ret;
 }
 
+#endif

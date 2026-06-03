@@ -16,6 +16,7 @@ static M8N_tbl        M8N;
 static ROHS_tbl       ROHS;
 static FSiA6B_tbl     IA6B;
 
+
 __attribute__((weak)) int _write(int file, char *ptr, int len)
 {
   (void)file;
@@ -27,12 +28,17 @@ static void EncodeMsg_AHRS(ROHS_tbl* p_rohs, BNO080_tbl* p_bno, LPS22HH_tbl_t* p
 
 void apInit(void)
 {
-
   uartOpen(DEF_UART1, 115200);  // ROHS
   uartOpen(DEF_UART5, 115200);    //FSi6AB uart
-  uartOpen(DEF_UART6, 9600);    //PC uart
-  timOpen(DEF_TIM7_TIMER);
-  adcOpen(DEF_ADC1);
+  //uartOpen(DEF_UART6, 9600);    //PC uart
+  timOpen (DEF_TIM7);
+  adcOpen (DEF_ADC1);
+  cliOpen(DEF_UART6, 9600);
+  spiOpen(DEF_HW_ICM20602);
+  spiOpen(DEF_HW_LPS22HH);
+  spiOpen(DEF_HW_BNO080);
+  i2cOpen(HW_DEF_I2C1);
+
   //  buzSetPitch(2000);
   //  delay(1000);
   //  buzSetPitch(1000);
@@ -69,59 +75,63 @@ void apMain(void)
       ledToggle(DEF_LED_3);
       premillis=millis();
     }
-
-    LPS22HH_GetInfo(&LPS22HH,LPS22HH_GetPress);
-    LPS22HH_GetAlt(&LPS22HH, TEMP_CORRECT);
-    LPS22HH_GetAltFilt(&LPS22HH);
-
-
-    ICM20602_GetInfo(&ICM20602, AxisGyroRaw);
-    BNO080_ReadInfo(&BNO080);
-
-    M8N_ReceivePacket(&M8N);
-    if(M8N.RxBuf.m8n_cplt_flag== 1)
-    {
-      M8N.RxBuf.m8n_cplt_flag = 0;
-
-      if(M8N_Checksum_Check(&M8N.RxBuf.buf[0], 36) == 1)
-      {
-        ledToggle(DEF_LED_1);
-        M8N_Parsing(&M8N.RxBuf.buf[0], &M8N.posllh);
-
-        //  printf("LAT: %d\tLON: %d\t Height: %d\n", M8N.posllh.lat, M8N.posllh.lon, M8N.posllh.height);
-      }
-    }
-
-    FSIA6B_RecivePacket(&IA6B);
-    if(IA6B.ibus_rx_cplt_flag == 1)
-    {
-      IA6B.ibus_rx_cplt_flag = 0;
-      if(FSIA6B_Check_checkSum(&IA6B, 32) == 1)
-      {
-        FSIA6B_Parsing(&IA6B);
-        if(FSIA6B_isFailsafe(&IA6B) == 1)
-        {
-
-        }
-        else
-        {
-
-        }
-      }
-    }
-
-    if(Is20msFlag(DEF_TIM7_TIMER)==1)
-    {
-
-      //ROHS_Read();
-      EncodeMsg_AHRS(&ROHS, &BNO080, &LPS22HH, &IA6B);
-      ROHS_Write(&ROHS,&ROHS.txBuf[0],20);
-      clear20msFlag(DEF_TIM7_TIMER);
-    }
-
-
-    BatVolt = adcVolt * 0.003619f;
+    //printf("%d \n",getResetCount());
+    cliMain();
   }
+
+//
+//    LPS22HH_GetInfo(&LPS22HH,LPS22HH_GetPress);
+//    LPS22HH_GetAlt(&LPS22HH, TEMP_CORRECT);
+//    LPS22HH_GetAltFilt(&LPS22HH);
+//
+//
+//    ICM20602_GetInfo(&ICM20602, AxisGyroRaw);
+//    BNO080_ReadInfo(&BNO080);
+//
+//    M8N_ReceivePacket(&M8N);
+//    if(M8N.RxBuf.m8n_cplt_flag== 1)
+//    {
+//      M8N.RxBuf.m8n_cplt_flag = 0;
+//
+//      if(M8N_Checksum_Check(&M8N.RxBuf.buf[0], 36) == 1)
+//      {
+//        ledToggle(DEF_LED_1);
+//        M8N_Parsing(&M8N.RxBuf.buf[0], &M8N.posllh);
+//
+//        //  printf("LAT: %d\tLON: %d\t Height: %d\n", M8N.posllh.lat, M8N.posllh.lon, M8N.posllh.height);
+//      }
+//    }
+//
+//    FSIA6B_RecivePacket(&IA6B);
+//    if(IA6B.ibus_rx_cplt_flag == 1)
+//    {
+//      IA6B.ibus_rx_cplt_flag = 0;
+//      if(FSIA6B_Check_checkSum(&IA6B, 32) == 1)
+//      {
+//        FSIA6B_Parsing(&IA6B);
+//        if(FSIA6B_isFailsafe(&IA6B) == 1)
+//        {
+//
+//        }
+//        else
+//        {
+//
+//        }
+//      }
+//    }
+//
+//    if(Is20msFlag(DEF_TIM7)==1)
+//    {
+//
+//      //ROHS_Read();
+//      EncodeMsg_AHRS(&ROHS, &BNO080, &LPS22HH, &IA6B);
+//      ROHS_Write(&ROHS,&ROHS.txBuf[0],20);
+//      clear20msFlag(DEF_TIM7);
+//    }
+//
+//
+//    BatVolt = adcVolt * 0.003619f;
+//  }
 }
 
 

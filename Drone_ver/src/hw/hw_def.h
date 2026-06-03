@@ -13,13 +13,22 @@
 
 
 #define _USE_HW_LED
+#define _USE_HW_RTC
 #define _USE_HW_UART
 #define _USE_HW_SPI
 #define _USE_HW_TIM
+#define _USE_HW_ADC
+#define _USE_HW_I2C
+#define _USE_HW_RESET
+
 #define _USE_HW_BUZZER
+#define _USE_HW_ICM20602
+#define _USE_HW_BNO080
 #define _USE_HW_M8N
-
-
+#define _USE_HW_AT24C08
+#define _USE_HW_LPS22HH
+#define _USE_HW_FSIA6B
+#define _USE_HW_ROHS
 
 #define HW_LED_MAX            3
 #define HW_DEF_LED_1          0
@@ -27,14 +36,24 @@
 #define HW_DEF_LED_3          2
 
 #define HW_UART_MAX_CH        4
+
 #define HW_DEF_UART1          0
 #define HW_DEF_UART4          1
 #define HW_DEF_UART5          2
 #define HW_DEF_UART6          3
 
-#define HW_TIM_MAX_CH         2
+#define HW_TIM_MAX_CH         (HW_PWM_MAX_CH+HW_TIMER_MAX_CH)
+
+
+#define HW_PWM_MAX_CH         5
 #define HW_DEF_TIM3_CH4       0
-#define HW_DEF_TIM7_TIMER     1
+#define HW_DEF_TIM5_CH1       1
+#define HW_DEF_TIM5_CH2       2
+#define HW_DEF_TIM5_CH3       3
+#define HW_DEF_TIM5_CH4       4
+
+#define HW_TIMER_MAX_CH       1
+#define HW_DEF_TIM7           0
 
 #define HW_SPI_MAX_CH         3
 #define DEF_HW_ICM20602       0

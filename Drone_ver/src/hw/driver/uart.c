@@ -9,6 +9,8 @@
 #include "uart.h"
 #include "qbuffer.h"
 
+#ifdef _USE_HW_UART
+
 UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart5;
 UART_HandleTypeDef huart1;
@@ -167,8 +169,8 @@ bool uartOpen(uint8_t ch, uint32_t baud)
       qbufferCreate(&qbuffer[ch], &uart6_rxbuf[0], 256);
 
       __HAL_RCC_DMA2_CLK_ENABLE();
-      HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 0, 0);
-      HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
+      HAL_NVIC_SetPriority(DMA2_Stream2_IRQn, 0, 0);
+      HAL_NVIC_EnableIRQ(DMA2_Stream2_IRQn);
 
       if (HAL_UART_Init(&huart6) != HAL_OK)
       {
@@ -646,3 +648,5 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
   /* USER CODE END USART6_MspDeInit 1 */
   }
 }
+
+#endif

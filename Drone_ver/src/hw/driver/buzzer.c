@@ -8,6 +8,8 @@
 
 #include "buzzer.h"
 #include "tim.h"
+#ifdef _USE_HW_BUZZER
+#define  DEF_BUZZER  DEF_TIM3_CH4
 
 bool buzInit(void)
 {
@@ -20,7 +22,7 @@ bool buzInit(void)
 bool buzSetPitch(uint32_t pitch)
 {
   bool ret=true;
-  pwmPsc(DEF_BUZZER, pitch);
+  timPsc(DEF_BUZZER, pitch);
   return ret;
 }
 
@@ -30,3 +32,4 @@ bool buzDeinit(void)
   pwmStop(DEF_BUZZER);
   return ret;
 }
+#endif

@@ -8,6 +8,7 @@
 #include "ICM20602/ICM20602.h"
 #include "spi.h"
 
+#ifdef _USE_HW_ICM20602
 #define DEF_ICM20602   DEF_HW_ICM20602
 
 static bool  ICM20602_Readbyte(uint8_t reg_addr, uint8_t* rx_data);
@@ -308,3 +309,4 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     data_ready_flag = 1;
   }
 }
+#endif

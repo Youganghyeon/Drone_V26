@@ -9,6 +9,7 @@
 #include "AT24C08.h"
 #include "i2c.h"
 
+#ifdef _USE_HW_AT24C08
 #define DEF_AT24C08   HW_DEF_I2C1
 #define AT24C08_ADDR  0x50
 //#define AT24C08_ADDR_HAL (0x50<<1 = 0xA0)
@@ -180,3 +181,4 @@ bool EP_PIDGain_Read(PID_Angle id, float* PGain, float* IGain, float* DGain)
 
   return false;
 }
+#endif

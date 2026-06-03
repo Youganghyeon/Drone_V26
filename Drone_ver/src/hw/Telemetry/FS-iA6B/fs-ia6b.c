@@ -9,6 +9,8 @@
 
 #include "fs-ia6b.h"
 #include "uart.h"
+
+#ifdef _USE_HW_FSIA6B
 #define   DEF_FSI6AB        DEF_UART5
 #define   FSI6AB_BAUDRATE   115200
 
@@ -116,4 +118,4 @@ bool FSIA6B_isFailsafe(FSiA6B_tbl* iBus)
 
 
 
-
+#endif

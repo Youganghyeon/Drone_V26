@@ -9,7 +9,7 @@
 #define SRC_COMMON_HW_INCLUDE_ICM20602_H_
 
 #include "hw_def.h"
-
+#ifdef _USE_HW_ICM20602
 #define ICM20602_SPI_CHANNEL    SPI1
 
 #define ICM20602_SPI_SCLK_PIN   GPIO_PIN_5
@@ -173,5 +173,5 @@ void     parsing_6AxisRawData(short* accel, short* gyro, ICM20602_RxPacket_tbl* 
 void     parsing_3AxisGyroRawData(short* gyro, ICM20602_RxPacket_tbl* p_rx);
 void     parsing_Get3AxisAccRawData(short* accel, ICM20602_RxPacket_tbl* p_rx);
 bool     ICM20602_GetInfo(ICM20602_tbl_t* p_sensor, uint8_t state);
-
+#endif
 #endif /* SRC_COMMON_HW_INCLUDE_ICM20602_H_ */

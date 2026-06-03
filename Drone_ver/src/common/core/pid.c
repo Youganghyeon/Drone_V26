@@ -32,7 +32,7 @@
 
 #include "pid.h"
 
-
+#ifdef _USE_PID
 #define DT 0.001f
 #define OUTER_DERIV_FILT_ENABLE 1
 #define INNER_DERIV_FILT_ENABLE 1
@@ -167,3 +167,4 @@ void Reset_All_PID_Integrator(void)
   Reset_PID_Integrator(&yaw_heading);
   Reset_PID_Integrator(&yaw_rate);
 }
+#endif

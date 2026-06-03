@@ -16,6 +16,9 @@
 #include "buzzer.h"
 #include "i2c.h"
 #include "adc.h"
+#include "rtc.h"
+#include "reset.h"
+#include "cli.h"
 
 #include "FS-iA6B/fs-ia6b.h"
 #include "M8N/m8n.h"

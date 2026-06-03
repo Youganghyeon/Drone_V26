@@ -1,6 +1,8 @@
 #include "Quaternion.h"
 
+#ifdef _USE_QUATERNION
 #define _180_DIV_PI 57.295779515f // = 180 / PI
+
 
 float BNO080_Roll;
 float BNO080_Pitch;
@@ -55,3 +57,4 @@ float invSqrt(float x)
 	y = y * (1.5f - (halfx * y * y));
 	return y;
 }
+#endif

@@ -9,7 +9,7 @@
 #define SRC_COMMON_HW_QBUFFER_H_
 
 #include "def.h"
-
+#ifdef _USE_QBUFFER
 typedef struct{
 
   uint8_t* p_buf;
@@ -24,5 +24,5 @@ bool qbufferWrite(qbuffer_t *p_node, uint8_t* p_data, uint32_t length);
 bool qbufferRead(qbuffer_t* p_node, uint8_t* p_data, uint32_t length);
 uint32_t qbufferAvailable(qbuffer_t *p_node);
 bool qbufferflush(qbuffer_t *p_node);
-
+#endif
 #endif /* SRC_COMMON_HW_QBUFFER_H_ */

@@ -10,6 +10,8 @@
 
 #include "hw_def.h"
 
+#ifdef _USE_HW_I2C
+
 #define MAX_I2C_CH      HW_MAX_I2C_CH
 #define _DEF_I2C1       HW_DEF_I2C1
 
@@ -26,4 +28,5 @@ bool i2cReadReg8B(uint8_t ch, uint16_t dev_addr, uint16_t reg_addr, uint8_t *pDa
 bool i2cWrite16B(uint8_t ch, uint16_t dev_addr, uint16_t reg_addr, uint8_t* pData, uint16_t length);
 bool i2cRead16B(uint8_t ch, uint16_t dev_addr, uint16_t reg_addr, uint8_t *pData, uint16_t length);
 
+#endif
 #endif /* SRC_COMMON_HW_INCLUDE_I2C_H_ */

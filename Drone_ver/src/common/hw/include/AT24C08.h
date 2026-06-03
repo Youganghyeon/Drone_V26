@@ -10,6 +10,7 @@
 
 #include "hw_def.h"
 
+#ifdef _USE_HW_AT24C08
 typedef enum{
   PID_Roll_in = 0x00,
   PID_Roll_out,
@@ -27,4 +28,6 @@ bool AT24C08_Open(void);
 void AT24C08_Init(void);
 void EP_PIDGain_Write(uint8_t id, float PGain, float IGain, float DGain);
 bool EP_PIDGain_Read(PID_Angle id, float* PGain, float* IGain, float* DGain);
+
+#endif
 #endif /* SRC_COMMON_HW_INCLUDE_AT24C08_H_ */

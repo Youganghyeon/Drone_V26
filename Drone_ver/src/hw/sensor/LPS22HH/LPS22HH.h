@@ -9,6 +9,7 @@
 #define SRC_HW_SENSOR_LPS22H_LPS22HH_H_
 
 #include "hw_def.h"
+#ifdef _USE_HW_LPS22HH
 /**
  * LPS22HH.c
  * @author ChrisP @ M-HIVE
@@ -84,5 +85,5 @@ bool LPS22HH_GetAlt(LPS22HH_tbl_t* p_sensor, LPS22HH_GetALT_Mode mode);
 bool LPS22HH_GetAltFilt(LPS22HH_tbl_t* p_sensor);
 
 
-
+#endif
 #endif /* SRC_HW_SENSOR_LPS22H_LPS22HH_H_ */

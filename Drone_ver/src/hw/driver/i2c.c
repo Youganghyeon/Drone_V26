@@ -7,6 +7,7 @@
 
 #include "i2c.h"
 
+#ifdef _USE_HW_I2C
 I2C_HandleTypeDef hi2c1;
 
 #define i2cTimeout       100
@@ -220,3 +221,4 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
 
 /* USER CODE END 1 */
 
+#endif

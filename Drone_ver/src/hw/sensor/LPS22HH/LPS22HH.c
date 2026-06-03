@@ -28,6 +28,7 @@
 #include "LPS22HH/LPS22HH.h"
 #include "spi.h"
 
+#ifdef _USE_HW_LPS22HH
 
 /**
  * @brief LPS22HH Register Map
@@ -139,7 +140,7 @@ bool LPS22HH_Open(LPS22HH_tbl_t* p_sensor)
     spiOpen(DEF_LPS22HH);
   }
 
-  printf("Checking LPS22HH...");
+ // printf("Checking LPS22HH...");
 
   // check WHO_AM_I (0x0F)
   LPS22HH_Readbyte(0x0F,&who_am_i);
@@ -147,14 +148,14 @@ bool LPS22HH_Open(LPS22HH_tbl_t* p_sensor)
   // who am i = 0xb3
   if( who_am_i == 0xb3)
   {
-    printf("\nLPS22HH who_am_i = 0x%02x...OK\n\n", who_am_i );
+    //printf("\nLPS22HH who_am_i = 0x%02x...OK\n\n", who_am_i );
   }
   else if( who_am_i != 0xb3)
   {
     LPS22HH_Readbyte(0x0F, &who_am_i); // check WHO_AM_I (0x0F)
 
     if ( who_am_i != 0xb3 ){
-      printf( "nLPS22HH Not OK: 0x%02x Should be 0x%02x\n", who_am_i, 0xb3);
+     // printf( "nLPS22HH Not OK: 0x%02x Should be 0x%02x\n", who_am_i, 0xb3);
       return false; //ERROR
     }
   }
@@ -175,7 +176,7 @@ bool LPS22HH_Open(LPS22HH_tbl_t* p_sensor)
     }
     if(millis()-pre_time>=10000) //10s
     {
-      printf("LPS22HH Reset fail\n");
+     // printf("LPS22HH Reset fail\n");
       return false;
     }
   }
@@ -318,3 +319,4 @@ float getAltitude2(float pressure, float temperature) //Get Altitude with temper
 {
   return ((powf((SEA_PRESSURE / pressure), 0.1902226f) - 1.0f) * (temperature + 273.15f)) / 0.0065f;
 }
+#endif

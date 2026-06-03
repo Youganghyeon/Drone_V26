@@ -8,6 +8,7 @@
 
 #include "adc.h"
 
+#ifdef _USE_HW_ADC
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
@@ -201,6 +202,6 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 
 /* USER CODE END 1 */
 
-
+#endif
 
 

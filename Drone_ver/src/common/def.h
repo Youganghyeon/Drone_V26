@@ -16,5 +16,15 @@
 #include "math.h"
 #include <string.h>
 
+#define _USE_DEF_CLI
+#define _USE_PID
+#define _USE_QUATERNION
+#define _USE_QBUFFER
 
+
+
+#define DEF_CLI_CMD_LIST_MAX          16
+#define DEF_CLI_CMD_NAME_MAX          16
+#define DEF_CLI_LINE_HIS_MAX           4
+#define DEF_CLI_LINE_BUF_MAX          64
 #endif /* SRC_COMMON_DEF_H_ */
