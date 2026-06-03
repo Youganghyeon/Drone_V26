@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 Add    Flash
 Add    Reset (+rtc)
 Modify TIM.c
