@@ -20,6 +20,7 @@
 #define _USE_HW_ADC
 #define _USE_HW_I2C
 #define _USE_HW_RESET
+#define _USE_HW_FLASH
 
 #define _USE_HW_BUZZER
 #define _USE_HW_ICM20602
@@ -43,8 +44,6 @@
 #define HW_DEF_UART6          3
 
 #define HW_TIM_MAX_CH         (HW_PWM_MAX_CH+HW_TIMER_MAX_CH)
-
-
 #define HW_PWM_MAX_CH         5
 #define HW_DEF_TIM3_CH4       0
 #define HW_DEF_TIM5_CH1       1
