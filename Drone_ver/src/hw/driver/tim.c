@@ -22,37 +22,35 @@ TIM_HandleTypeDef htim7;
 // 구조체 정의
 // ---------------------------------------------------------------------
 typedef struct {
-    uint32_t           channel;
-    TIM_HandleTypeDef* htim;
-    bool               isInit;
-    bool               isOpen;
+  uint32_t           channel;
+  TIM_HandleTypeDef* htim;
+  bool               isInit;
+  bool               isOpen;
 } TIM_Base_tbl;
 
 typedef struct {
-    bool     Flag_1ms;
-    bool     Flag_20ms;
-    uint32_t counter_20ms;
+  bool     Flag_1ms;
+  bool     Flag_20ms;
+  uint32_t counter_20ms;
 } TIMER_Flag_tbl;
 
 typedef struct {
-    uint32_t freq;
-    uint32_t max_output;
-    bool     isInit;
+  uint32_t freq;
+  uint32_t max_output;
+  bool     isInit;
 } PWM_Status_tbl;
 
 typedef struct {
-    TIM_Base_tbl   tim;
-    TIMER_Flag_tbl timerFlag;
+  TIM_Base_tbl   tim;
+  TIMER_Flag_tbl timerFlag;
 } TIMER_tbl;
 
 typedef struct {
-    TIM_Base_tbl   tim;
-    PWM_Status_tbl pwmStatus;
+  TIM_Base_tbl   tim;
+  PWM_Status_tbl pwmStatus;
 } PWM_tbl;
 
-// ---------------------------------------------------------------------
-// 테이블
-// ---------------------------------------------------------------------
+
 static PWM_tbl pwm_tbl[PWM_MAX_CH] = {
     {{TIM_CHANNEL_4, &htim3, false, false}, {0, 0, false}},
     {{TIM_CHANNEL_1, &htim5, false, false}, {0, 0, false}},
@@ -65,283 +63,282 @@ static TIMER_tbl timer_tbl[TIMER_MAX_CH] = {
     {{0xFF, &htim7, false, false}, {false, false, 0}},
 };
 
-// ---------------------------------------------------------------------
-// 내부 함수 선언
-// ---------------------------------------------------------------------
 static bool pwmOpen   (uint8_t hw_ch);
 static bool timerOpen (uint8_t hw_ch);
 static bool pwmPsc    (uint8_t hw_ch, uint32_t psc);
 static bool timerPsc  (uint8_t hw_ch, uint32_t psc);
 
-// ---------------------------------------------------------------------
-// timInit
-// ---------------------------------------------------------------------
+
 void timInit(void)
 {
-    for (int i = 0; i < PWM_MAX_CH; i++) {
-        pwm_tbl[i].tim.isInit = true;
-        pwm_tbl[i].tim.isOpen = false;
-    }
-    for (int i = 0; i < TIMER_MAX_CH; i++) {
-        timer_tbl[i].tim.isInit = true;
-        timer_tbl[i].tim.isOpen = false;
-    }
+  for (int i = 0; i < PWM_MAX_CH; i++) {
+    pwm_tbl[i].tim.isInit = true;
+    pwm_tbl[i].tim.isOpen = false;
+  }
+  for (int i = 0; i < TIMER_MAX_CH; i++) {
+    timer_tbl[i].tim.isInit = true;
+    timer_tbl[i].tim.isOpen = false;
+  }
 }
 
-// ---------------------------------------------------------------------
-// timOpen
-// ---------------------------------------------------------------------
+
 bool timOpen(uint8_t ch)
 {
-    uint8_t idx = TIM_GET_INDEX(ch);
-    if (TIM_IS_TIMER(ch)) {
-        if (idx >= TIMER_MAX_CH) return false;
-        return timerOpen(idx);
-    } else {
-        if (idx >= PWM_MAX_CH) return false;
-        return pwmOpen(idx);
-    }
+  uint8_t idx = TIM_GET_INDEX(ch);
+  if (TIM_IS_TIMER(ch)) {
+    if (idx >= TIMER_MAX_CH) return false;
+    return timerOpen(idx);
+  } else {
+    if (idx >= PWM_MAX_CH) return false;
+    return pwmOpen(idx);
+  }
 }
 
-// ---------------------------------------------------------------------
-// pwmOpen
-// ---------------------------------------------------------------------
 static bool pwmOpen(uint8_t hw_ch)
 {
-    TIM_ClockConfigTypeDef  sClockSourceConfig = {0};
-    TIM_MasterConfigTypeDef sMasterConfig      = {0};
-    TIM_OC_InitTypeDef      sConfigOC          = {0};
+  TIM_ClockConfigTypeDef  sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig      = {0};
+  TIM_OC_InitTypeDef      sConfigOC          = {0};
 
-    TIM_Base_tbl*      p_tim    = &pwm_tbl[hw_ch].tim;
-    TIM_HandleTypeDef* p_handle = p_tim->htim;
+  TIM_Base_tbl*      p_tim    = &pwm_tbl[hw_ch].tim;
+  TIM_HandleTypeDef* p_handle = p_tim->htim;
 
-    switch (hw_ch) {
-        case HW_DEF_TIM3_CH4:
-            p_handle->Instance                 = TIM3;
-            p_handle->Init.Prescaler           = 1000 - 1;
-            p_handle->Init.CounterMode         = TIM_COUNTERMODE_UP;
-            p_handle->Init.Period              = 21 - 1;
-            p_handle->Init.ClockDivision       = TIM_CLOCKDIVISION_DIV1;
-            p_handle->Init.AutoReloadPreload   = TIM_AUTORELOAD_PRELOAD_DISABLE;
-            if (HAL_TIM_Base_Init(p_handle) != HAL_OK)          { Error_Handler(); }
-            sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-            if (HAL_TIM_ConfigClockSource(p_handle, &sClockSourceConfig) != HAL_OK) { Error_Handler(); }
-            if (HAL_TIM_PWM_Init(p_handle) != HAL_OK)           { Error_Handler(); }
-            sMasterConfig.MasterOutputTrigger  = TIM_TRGO_RESET;
-            sMasterConfig.MasterSlaveMode      = TIM_MASTERSLAVEMODE_DISABLE;
-            if (HAL_TIMEx_MasterConfigSynchronization(p_handle, &sMasterConfig) != HAL_OK) { Error_Handler(); }
-            sConfigOC.OCMode     = TIM_OCMODE_PWM1;
-            sConfigOC.Pulse      = 10;
-            sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-            sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-            if (HAL_TIM_PWM_ConfigChannel(p_handle, &sConfigOC, p_tim->channel) != HAL_OK) { Error_Handler(); }
-            HAL_TIM_MspPostInit(p_handle);
-            p_tim->isOpen = true;
-            break;
+  switch (hw_ch) {
+    case HW_DEF_TIM3_CH4:
+      p_handle->Instance                 = TIM3;
+      p_handle->Init.Prescaler           = 1000 - 1;
+      p_handle->Init.CounterMode         = TIM_COUNTERMODE_UP;
+      p_handle->Init.Period              = 21 - 1;
+      p_handle->Init.ClockDivision       = TIM_CLOCKDIVISION_DIV1;
+      p_handle->Init.AutoReloadPreload   = TIM_AUTORELOAD_PRELOAD_DISABLE;
+      if (HAL_TIM_Base_Init(p_handle) != HAL_OK)          { Error_Handler(); }
+      sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+      if (HAL_TIM_ConfigClockSource(p_handle, &sClockSourceConfig) != HAL_OK) { Error_Handler(); }
+      if (HAL_TIM_PWM_Init(p_handle) != HAL_OK)           { Error_Handler(); }
+      sMasterConfig.MasterOutputTrigger  = TIM_TRGO_RESET;
+      sMasterConfig.MasterSlaveMode      = TIM_MASTERSLAVEMODE_DISABLE;
+      if (HAL_TIMEx_MasterConfigSynchronization(p_handle, &sMasterConfig) != HAL_OK) { Error_Handler(); }
+      sConfigOC.OCMode     = TIM_OCMODE_PWM1;
+      sConfigOC.Pulse      = 10;
+      sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+      sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+      if (HAL_TIM_PWM_ConfigChannel(p_handle, &sConfigOC, p_tim->channel) != HAL_OK) { Error_Handler(); }
+      HAL_TIM_MspPostInit(p_handle);
+      p_tim->isOpen = true;
+      break;
 
-        case HW_DEF_TIM5_CH1:
-        case HW_DEF_TIM5_CH2:
-        case HW_DEF_TIM5_CH3:
-        case HW_DEF_TIM5_CH4:
-            // TIM5는 채널 공유 → 타이머 base가 아직 안열렸을 때만 init
-            if (!p_handle->Instance) {
-                p_handle->Instance               = TIM5;
-                p_handle->Init.Prescaler         = 0;
-                p_handle->Init.CounterMode       = TIM_COUNTERMODE_UP;
-                p_handle->Init.Period            = 41999;
-                p_handle->Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
-                p_handle->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-                if (HAL_TIM_Base_Init(p_handle) != HAL_OK)       { Error_Handler(); }
-                sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-                if (HAL_TIM_ConfigClockSource(p_handle, &sClockSourceConfig) != HAL_OK) { Error_Handler(); }
-                if (HAL_TIM_PWM_Init(p_handle) != HAL_OK)        { Error_Handler(); }
-                sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-                sMasterConfig.MasterSlaveMode     = TIM_MASTERSLAVEMODE_DISABLE;
-                if (HAL_TIMEx_MasterConfigSynchronization(p_handle, &sMasterConfig) != HAL_OK) { Error_Handler(); }
-            }
-            // 채널은 매번 설정
-            sConfigOC.OCMode     = TIM_OCMODE_PWM1;
-            sConfigOC.Pulse      = 0;
-            sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-            sConfigOC.OCFastMode = TIM_OCFAST_ENABLE;
-            if (HAL_TIM_PWM_ConfigChannel(p_handle, &sConfigOC, p_tim->channel) != HAL_OK) { Error_Handler(); }
-            HAL_TIM_MspPostInit(p_handle);
-            p_tim->isOpen = true;
-            break;
+    case HW_DEF_TIM5_CH1:
+    case HW_DEF_TIM5_CH2:
+    case HW_DEF_TIM5_CH3:
+    case HW_DEF_TIM5_CH4:
 
-        default:
-            return false;
-    }
-    return true;
+      if (!p_handle->Instance) {
+        p_handle->Instance               = TIM5;
+        p_handle->Init.Prescaler         = 0;
+        p_handle->Init.CounterMode       = TIM_COUNTERMODE_UP;
+        p_handle->Init.Period            = 41999;
+        p_handle->Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
+        p_handle->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+        if (HAL_TIM_Base_Init(p_handle) != HAL_OK)       { Error_Handler(); }
+        sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+        if (HAL_TIM_ConfigClockSource(p_handle, &sClockSourceConfig) != HAL_OK) { Error_Handler(); }
+        if (HAL_TIM_PWM_Init(p_handle) != HAL_OK)        { Error_Handler(); }
+        sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+        sMasterConfig.MasterSlaveMode     = TIM_MASTERSLAVEMODE_DISABLE;
+        if (HAL_TIMEx_MasterConfigSynchronization(p_handle, &sMasterConfig) != HAL_OK) { Error_Handler(); }
+      }
+
+      sConfigOC.OCMode     = TIM_OCMODE_PWM1;
+      sConfigOC.Pulse      = 0;
+      sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+      sConfigOC.OCFastMode = TIM_OCFAST_ENABLE;
+      if (HAL_TIM_PWM_ConfigChannel(p_handle, &sConfigOC, p_tim->channel) != HAL_OK) { Error_Handler(); }
+      HAL_TIM_MspPostInit(p_handle);
+      p_tim->isOpen = true;
+      break;
+
+    default:
+      return false;
+  }
+  return true;
 }
 
-// ---------------------------------------------------------------------
-// timerOpen
-// ---------------------------------------------------------------------
+
 static bool timerOpen(uint8_t hw_ch)
 {
-    TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-    TIM_Base_tbl*      p_tim    = &timer_tbl[hw_ch].tim;
-    TIM_HandleTypeDef* p_handle = p_tim->htim;
+  TIM_Base_tbl*      p_tim    = &timer_tbl[hw_ch].tim;
+  TIM_HandleTypeDef* p_handle = p_tim->htim;
 
-    switch (hw_ch) {
-        case HW_DEF_TIM7:
-            p_handle->Instance               = TIM7;
-            p_handle->Init.Prescaler         = 41999;
-            p_handle->Init.CounterMode       = TIM_COUNTERMODE_UP;
-            p_handle->Init.Period            = 1;
-            p_handle->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-            if (HAL_TIM_Base_Init(p_handle) != HAL_OK) { Error_Handler(); }
-            sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-            sMasterConfig.MasterSlaveMode     = TIM_MASTERSLAVEMODE_DISABLE;
-            if (HAL_TIMEx_MasterConfigSynchronization(p_handle, &sMasterConfig) != HAL_OK) { Error_Handler(); }
-            p_tim->isOpen = true;
-            HAL_TIM_Base_Start_IT(p_handle);
-            break;
+  switch (hw_ch) {
+    case HW_DEF_TIM7:
+      p_handle->Instance               = TIM7;
+      p_handle->Init.Prescaler         = 41999;
+      p_handle->Init.CounterMode       = TIM_COUNTERMODE_UP;
+      p_handle->Init.Period            = 1;
+      p_handle->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+      if (HAL_TIM_Base_Init(p_handle) != HAL_OK) { Error_Handler(); }
+      sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+      sMasterConfig.MasterSlaveMode     = TIM_MASTERSLAVEMODE_DISABLE;
+      if (HAL_TIMEx_MasterConfigSynchronization(p_handle, &sMasterConfig) != HAL_OK) { Error_Handler(); }
+      p_tim->isOpen = true;
+      HAL_TIM_Base_Start_IT(p_handle);
+      break;
 
-        default:
-            return false;
-    }
-    return true;
+    default:
+      return false;
+  }
+  return true;
 }
 
-// ---------------------------------------------------------------------
-// timDeinit
-// ---------------------------------------------------------------------
+
 bool timDeinit(uint8_t ch)
 {
-    uint8_t idx = TIM_GET_INDEX(ch);
-    TIM_HandleTypeDef* p_handle;
+  uint8_t idx = TIM_GET_INDEX(ch);
+  TIM_HandleTypeDef* p_handle;
 
-    if (TIM_IS_TIMER(ch)) {
-        if (idx >= TIMER_MAX_CH) return false;
-        p_handle = timer_tbl[idx].tim.htim;
-        timer_tbl[idx].tim.isOpen = false;
-    } else {
-        if (idx >= PWM_MAX_CH) return false;
-        p_handle = pwm_tbl[idx].tim.htim;
-        pwm_tbl[idx].tim.isOpen = false;
-    }
+  if (TIM_IS_TIMER(ch)) {
+    if (idx >= TIMER_MAX_CH) return false;
+    p_handle = timer_tbl[idx].tim.htim;
+    timer_tbl[idx].tim.isOpen = false;
+  } else {
+    if (idx >= PWM_MAX_CH) return false;
+    p_handle = pwm_tbl[idx].tim.htim;
+    pwm_tbl[idx].tim.isOpen = false;
+  }
 
-    return (HAL_TIM_Base_Stop(p_handle) == HAL_OK);
+  return (HAL_TIM_Base_Stop(p_handle) == HAL_OK);
 }
 
-// ---------------------------------------------------------------------
-// timPsc
-// ---------------------------------------------------------------------
+
 bool timPsc(uint8_t ch, uint32_t psc)
 {
-    uint8_t idx = TIM_GET_INDEX(ch);
-    if (TIM_IS_TIMER(ch)) {
-        return timerPsc(idx, psc);
-    } else {
-        return pwmPsc(idx, psc);
-    }
+  uint8_t idx = TIM_GET_INDEX(ch);
+  if (TIM_IS_TIMER(ch)) {
+    return timerPsc(idx, psc);
+  } else {
+    return pwmPsc(idx, psc);
+  }
 }
 
 static bool pwmPsc(uint8_t hw_ch, uint32_t psc)
 {
-    if (hw_ch >= PWM_MAX_CH) return false;
+  if (hw_ch >= PWM_MAX_CH) return false;
 
-    switch (hw_ch) {
-        case HW_DEF_TIM3_CH4:
-            TIM3->PSC = psc;
-            break;
-        case HW_DEF_TIM5_CH1:
-        case HW_DEF_TIM5_CH2:
-        case HW_DEF_TIM5_CH3:
-        case HW_DEF_TIM5_CH4:
-            TIM5->PSC = psc;
-            break;
-        default:
-            return false;
-    }
-    return true;
+  switch (hw_ch) {
+    case HW_DEF_TIM3_CH4:
+      TIM3->PSC = psc;
+      break;
+    case HW_DEF_TIM5_CH1:
+    case HW_DEF_TIM5_CH2:
+    case HW_DEF_TIM5_CH3:
+    case HW_DEF_TIM5_CH4:
+      TIM5->PSC = psc;
+      break;
+    default:
+      return false;
+  }
+  return true;
 }
 
 static bool timerPsc(uint8_t hw_ch, uint32_t psc)
 {
-    if (hw_ch >= TIMER_MAX_CH) return false;
+  if (hw_ch >= TIMER_MAX_CH) return false;
 
-    switch (hw_ch) {
-        case HW_DEF_TIM7:
-            TIM7->PSC = psc;
-            break;
-        default:
-            return false;
-    }
-    return true;
+  switch (hw_ch) {
+    case HW_DEF_TIM7:
+      TIM7->PSC = psc;
+      break;
+    default:
+      return false;
+  }
+  return true;
 }
 
-// ---------------------------------------------------------------------
-// pwmStart / pwmStop
-// ---------------------------------------------------------------------
+bool pwmChange(uint8_t ch, uint32_t ccr)
+{
+  bool ret=false;
+  uint8_t idx =0;
+  if(!(TIM_IS_TIMER(ch)))
+  {
+    idx = TIM_GET_INDEX(ch);
+    if (idx < PWM_MAX_CH)
+    {
+      ret=true;
+    }
+  }
+  if(ret==true)
+  {
+      TIM_Base_tbl* p_tim = &pwm_tbl[idx].tim;
+    __HAL_TIM_SET_COMPARE(p_tim->htim, p_tim->channel, ccr);
+  }
+  return ret;
+}
+
 bool pwmStart(uint8_t ch)
 {
-    if (TIM_IS_TIMER(ch)) return false;
+  if (TIM_IS_TIMER(ch)) return false;
 
-    uint8_t idx = TIM_GET_INDEX(ch);
-    if (idx >= PWM_MAX_CH) return false;
+  uint8_t idx = TIM_GET_INDEX(ch);
+  if (idx >= PWM_MAX_CH) return false;
 
-    TIM_Base_tbl* p_tim = &pwm_tbl[idx].tim;
-    return (HAL_TIM_PWM_Start(p_tim->htim, p_tim->channel) == HAL_OK);
+  TIM_Base_tbl* p_tim = &pwm_tbl[idx].tim;
+  return (HAL_TIM_PWM_Start(p_tim->htim, p_tim->channel) == HAL_OK);
 }
 
 bool pwmStop(uint8_t ch)
 {
-    if (TIM_IS_TIMER(ch)) return false;
+  if (TIM_IS_TIMER(ch)) return false;
 
-    uint8_t idx = TIM_GET_INDEX(ch);
-    if (idx >= PWM_MAX_CH) return false;
+  uint8_t idx = TIM_GET_INDEX(ch);
+  if (idx >= PWM_MAX_CH) return false;
 
-    TIM_Base_tbl* p_tim = &pwm_tbl[idx].tim;
-    return (HAL_TIM_PWM_Stop(p_tim->htim, p_tim->channel) == HAL_OK);
+  TIM_Base_tbl* p_tim = &pwm_tbl[idx].tim;
+  return (HAL_TIM_PWM_Stop(p_tim->htim, p_tim->channel) == HAL_OK);
 }
 
-// ---------------------------------------------------------------------
-// 1ms / 20ms 플래그
-// ---------------------------------------------------------------------
+
 bool Is1msFlag(uint8_t ch)
 {
-    if (!TIM_IS_TIMER(ch)) return false;
+  if (!TIM_IS_TIMER(ch)) return false;
 
-    uint8_t idx = TIM_GET_INDEX(ch);
-    if (idx >= TIMER_MAX_CH) return false;
+  uint8_t idx = TIM_GET_INDEX(ch);
+  if (idx >= TIMER_MAX_CH) return false;
 
-    return timer_tbl[idx].timerFlag.Flag_1ms;
+  return timer_tbl[idx].timerFlag.Flag_1ms;
 }
 
 bool Is20msFlag(uint8_t ch)
 {
-    if (!TIM_IS_TIMER(ch)) return false;
+  if (!TIM_IS_TIMER(ch)) return false;
 
-    uint8_t idx = TIM_GET_INDEX(ch);
-    if (idx >= TIMER_MAX_CH) return false;
+  uint8_t idx = TIM_GET_INDEX(ch);
+  if (idx >= TIMER_MAX_CH) return false;
 
-    return timer_tbl[idx].timerFlag.Flag_20ms;
+  return timer_tbl[idx].timerFlag.Flag_20ms;
 }
 
 bool clear1msFlag(uint8_t ch)
 {
-    if (!TIM_IS_TIMER(ch)) return false;
+  if (!TIM_IS_TIMER(ch)) return false;
 
-    uint8_t idx = TIM_GET_INDEX(ch);
-    if (idx >= TIMER_MAX_CH) return false;
+  uint8_t idx = TIM_GET_INDEX(ch);
+  if (idx >= TIMER_MAX_CH) return false;
 
-    timer_tbl[idx].timerFlag.Flag_1ms = false;
-    return true;
+  timer_tbl[idx].timerFlag.Flag_1ms = false;
+  return true;
 }
 
 bool clear20msFlag(uint8_t ch)
 {
-    if (!TIM_IS_TIMER(ch)) return false;
+  if (!TIM_IS_TIMER(ch)) return false;
 
-    uint8_t idx = TIM_GET_INDEX(ch);
-    if (idx >= TIMER_MAX_CH) return false;
+  uint8_t idx = TIM_GET_INDEX(ch);
+  if (idx >= TIMER_MAX_CH) return false;
 
-    timer_tbl[idx].timerFlag.Flag_20ms = false;
-    return true;
+  timer_tbl[idx].timerFlag.Flag_20ms = false;
+  return true;
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)

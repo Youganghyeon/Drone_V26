@@ -5,7 +5,7 @@
  *      Author: yougang
  */
 
-#include "ICM20602/ICM20602.h"
+#include "ICM20602.h"
 #include "spi.h"
 
 #ifdef _USE_HW_ICM20602

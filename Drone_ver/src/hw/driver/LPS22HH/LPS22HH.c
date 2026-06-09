@@ -25,7 +25,7 @@
  * https://cafe.naver.com/mhiveacademy
 */
 
-#include "LPS22HH/LPS22HH.h"
+#include "LPS22HH.h"
 #include "spi.h"
 
 #ifdef _USE_HW_LPS22HH

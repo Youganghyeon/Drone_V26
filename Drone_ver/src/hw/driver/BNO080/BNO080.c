@@ -43,7 +43,7 @@
  * https://www.inflearn.com/course/stm32cubelde-stm32f4%EB%93%9C%EB%A1%A0-%EA%B0%9C%EB%B0%9C
  */
 
-#include "BNO080/BNO080.h"
+#include "BNO080.h"
 #include "spi.h"
 #include "Quaternion.h"
 
@@ -135,6 +135,7 @@ bool BNO080_Open(BNO080_tbl* p_sensor)
 // ReadInfo - 더블버퍼 DMA
 //=============================================================================
 
+bool test= false;
 bool BNO080_ReadInfo(BNO080_tbl* p_sensor)
 {
 
@@ -253,6 +254,7 @@ bool BNO080_receivePacket_DMA(BNO080_Packet_tbl* p_packet)
     if (dataLength >= MAX_PACKET_SIZE)
     {
       SPI_SendReceive_DMA(DEF_BNO080, &tx_dummy[0], &p_packet->shtpData[0], (uint16_t)MAX_PACKET_SIZE);
+      ret = true;
     }
     else if(dataLength < MAX_PACKET_SIZE)
     {
@@ -311,8 +313,8 @@ bool BNO080_sendPacket(BNO080_Packet_tbl* p_packet, uint8_t channelNumber, uint8
     if(BNO080_waitForSPI() == 0)
         return false;
 
-    static uint8_t tx_data[4];
-    static uint8_t rx_dummy[MAX_PACKET_SIZE];
+    uint8_t tx_data[4];
+    uint8_t rx_dummy[MAX_PACKET_SIZE];
 
     uint8_t packetLength = dataLength + 4;
 
@@ -529,8 +531,8 @@ bool BNO080_Update(float* q, BNO080_tbl* p_sensor)
 //=============================================================================
 void BNO080_enableRotationVector(BNO080_tbl* p_sensor, uint16_t timeBetweenReports)
 {
-    BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet;
-    BNO080_setFeatureCommand(p_packet, SENSOR_REPORTID_ROTATION_VECTOR, timeBetweenReports, 0);
+  BNO080_Packet_tbl* p_packet = &p_sensor->BNO080_Packet;
+  BNO080_setFeatureCommand(p_packet, SENSOR_REPORTID_ROTATION_VECTOR, timeBetweenReports, 0);
 }
 
 void BNO080_setFeatureCommand(BNO080_Packet_tbl* p_packet, uint8_t reportID, uint32_t microsBetweenReports, uint32_t specificConfig)

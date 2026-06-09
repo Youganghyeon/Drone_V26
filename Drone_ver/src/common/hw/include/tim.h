@@ -32,6 +32,7 @@
 #define TIM_TYPE_TIMER_FLAG      (0x80)
 
 #define    TIM_IS_TIMER(ch)     (ch & 0x80)
+
 #define    TIM_GET_INDEX(ch)    (ch & 0x7F)
 
 
@@ -51,6 +52,7 @@ void timInit(void);
 bool timOpen(uint8_t ch);
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle);
 bool pwmStart(uint8_t ch);
+bool pwmChange(uint8_t ch, uint32_t ccr);
 bool timPsc(uint8_t ch, uint32_t psc);
 bool pwmStop(uint8_t ch);
 bool timDeinit(uint8_t ch);

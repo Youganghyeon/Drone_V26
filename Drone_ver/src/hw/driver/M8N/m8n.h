@@ -5,8 +5,8 @@
  *      Author: yougang
  */
 
-#ifndef SRC_HW_TELEMETRY_M8N_M8N_H_
-#define SRC_HW_TELEMETRY_M8N_M8N_H_
+#ifndef SRC_HW_TELEMETERY_M8N_M8N_H_
+#define SRC_HW_TELEMETERY_M8N_M8N_H_
 
 #include "hw_def.h"
 
@@ -52,4 +52,4 @@ bool    M8N_Write(uint8_t *buf, uint32_t length);
 uint8_t M8N_Read(void);
 #endif
 
-#endif /* SRC_HW_TELEMETRY_M8N_M8N_H_ */
+#endif /* SRC_HW_TELEMETERY_M8N_M8N_H_ */

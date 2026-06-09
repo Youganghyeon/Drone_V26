@@ -6,16 +6,9 @@
  */
 
 
-#include "ap.h"
-
-
-static LPS22HH_tbl_t  LPS22HH;
-static ICM20602_tbl_t ICM20602;
-static BNO080_tbl     BNO080;
-static M8N_tbl        M8N;
-static ROHS_tbl       ROHS;
-static FSiA6B_tbl     IA6B;
-
+#include "dronetm.h"
+#include "ap.h"#include "gsc_tm.h"
+#include "sensor.h"
 
 __attribute__((weak)) int _write(int file, char *ptr, int len)
 {
@@ -31,9 +24,10 @@ void apInit(void)
   uartOpen(DEF_UART1, 115200);  // ROHS
   uartOpen(DEF_UART5, 115200);    //FSi6AB uart
   //uartOpen(DEF_UART6, 9600);    //PC uart
+  uartOpen(DEF_UART4, 115200);
   timOpen (DEF_TIM7);
   adcOpen (DEF_ADC1);
-  cliOpen(DEF_UART6, 9600);
+ // cliOpen(DEF_UART6, 9600);
   spiOpen(DEF_HW_ICM20602);
   spiOpen(DEF_HW_LPS22HH);
   spiOpen(DEF_HW_BNO080);
@@ -44,25 +38,18 @@ void apInit(void)
   //  buzSetPitch(1000);
   //  delay(1000);
   buzDeinit();
-
-  M8N_Open();
-  ROHS_Open(&ROHS, DEF_UART1);
-  FSIA6B_Open(&IA6B);
-
-  LPS22HH_Open(&LPS22HH);
-  ICM20602_Open(&ICM20602);
-  BNO080_Open(&BNO080);
-  BNO080_enableRotationVector(&BNO080, 2500);
-
+  gcsTmInit();
+  droneTmInit();
   AT24C08_Open();
+  sensorInit();
 
- // bool EP_PIDGain_Read(PID_All,
 
 }
 
 float    BatVolt=0.0;
 uint16_t adcVolt=0;
-
+Sensor_tbl* p_data;
+Sensor_tbl data;
 void apMain(void)
 {
   uint32_t premillis=0;
@@ -75,8 +62,11 @@ void apMain(void)
       ledToggle(DEF_LED_3);
       premillis=millis();
     }
-    //printf("%d \n",getResetCount());
-    cliMain();
+    sensorUpdate();
+    droneTmUpdate();
+    gcsTmUpdate();
+    p_data = sensorGetData();
+    //cliMain();
   }
 
 //

@@ -9,8 +9,14 @@
 #include "tim.h"
 
 #ifdef _USE_HW_ESC
+
+#define ESC_IDLE_SPEED    10500
+#define ESC_MAX_SPEED     21000
+
+
 typedef struct{
- isInit;
+ bool     isInit;
+ uint32_t speed;
 
 }Esc_tbl;
 
@@ -39,29 +45,31 @@ void escOpen(uint8_t ch)
   return ret;
 }
 
-bool escCalibration(uint8_t ch)
+bool escCalibration(void)
 {
-  bool ret=false;
   for(int i=0; i<MAX_ESC_CH; i++)
   {
-    TIM5->CCR1 = 21000;
-    TIM5->CCR2 = 21000;
-    TIM5->CCR3 = 21000;
-    TIM5->CCR4 = 21000;
-    HAL_Delay(7000);
-    TIM5->CCR1 = 10500;
-    TIM5->CCR2 = 10500;
-    TIM5->CCR3 = 10500;
-    TIM5->CCR4 = 10500;
-    HAL_Delay(8000);
-
+    pwmChange(i, 21000);
+    delay(7000);
+    pwmChange(i, 21000);
+    delay(8000);
   }
-  return ret;
+  return true;
 }
 
 
-void escWrite(uint8_t ch, uint32_t speed)
+bool escOutput(uint8_t ch, uint32_t speed)
 {
-
+ bool ret = false;
+ if(speed > ESC_MAX_SPEED)
+ {
+   speed = ESC_MAX_SPEED
+ }
+ if(speed < ESC_IDLE_SPEED)
+ {
+   speed = ESC_IDLE_SPEED
+ }
+  ret = pwmChange(DEF_TIM5_CH1, speed);
+ return ret;
 }
 #endif

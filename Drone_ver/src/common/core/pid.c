@@ -110,7 +110,7 @@ void Double_PID_Calc(Double_PID_tbl* axis, float set_point_angle, float angle/*B
   /****************************************************************************************/
 }
 
-void Single_PID_Yaw_Heading_Calc(PIDSingle* axis, float set_point_angle, float angle/*BNO080 Rotation Angle*/, float rate/*ICM-20602 Angular Rate*/)
+void Single_PID_Yaw_Heading_Calc(Single_PID_tbl* axis, float set_point_angle, float angle/*BNO080 Rotation Angle*/, float rate/*ICM-20602 Angular Rate*/)
 {
   /*********** Single PID Begin (Yaw Angular Position) *************/
   axis->reference = set_point_angle;  //Set point of yaw heading @ yaw stick is center.
@@ -133,7 +133,7 @@ void Single_PID_Yaw_Heading_Calc(PIDSingle* axis, float set_point_angle, float a
   /***************************************************************/
 }
 
-void Single_PID_Yaw_Rate_Calc(PIDSingle* axis, float set_point_rate, float rate/*ICM-20602 Angular Rate*/)
+void Single_PID_Yaw_Rate_Calc(Single_PID_tbl* axis, float set_point_rate, float rate/*ICM-20602 Angular Rate*/)
 {
   /*********** Single PID Begin (Yaw Angular Rate Control) *************/
   axis->reference = set_point_rate; //Set point of yaw heading @ yaw stick is not center.
@@ -153,17 +153,17 @@ void Single_PID_Yaw_Rate_Calc(PIDSingle* axis, float set_point_rate, float rate/
   /*******************************************************************/
 }
 
-void Reset_PID_Integrator(PIDSingle* axis)
+void Reset_PID_Integrator(Single_PID_tbl* axis)
 {
   axis->error_sum = 0;
 }
 
 void Reset_All_PID_Integrator(void)
 {
-  Reset_PID_Integrator(&roll.in);
-  Reset_PID_Integrator(&roll.out);
-  Reset_PID_Integrator(&pitch.in);
-  Reset_PID_Integrator(&pitch.out);
+  Reset_PID_Integrator(&roll.inner);
+  Reset_PID_Integrator(&roll.outer);
+  Reset_PID_Integrator(&pitch.inner);
+  Reset_PID_Integrator(&pitch.outer);
   Reset_PID_Integrator(&yaw_heading);
   Reset_PID_Integrator(&yaw_rate);
 }

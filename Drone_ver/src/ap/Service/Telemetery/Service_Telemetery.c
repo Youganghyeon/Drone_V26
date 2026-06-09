@@ -6,12 +6,9 @@
  */
 
 
-#include "Servicemsg.h"
+#include "Service_Telemetery.h"
+#include "sensor.h"
 #include "FS-iA6B/fs-ia6b.h"
-#include "M8N/m8n.h"
-#include "ICM20602/ICM20602.h"
-#include "LPS22HH/LPS22HH.h"
-#include "BNO080/BNO080.h"
 #include "ROHS/rohs.h"
 #include "AT24C08.h"
 
@@ -23,11 +20,15 @@ typedef struct{
   ROHS_tbl*        Rohs;
 }Service_Msg_tbl;
 
-
 Service_Msg_tbl Service_msg;
-
+Sensor_tbl      Sensor_data;
 void ServiceMsg_Init(void)
 {
+  if(isSensorInit()==false)
+  {
+    return false;
+  }
+  Sensor_data = sensorGetData();
 }
 
 bool ServiceMsg_Open(void)
@@ -37,24 +38,24 @@ bool ServiceMsg_Open(void)
   return ret;
 }
 
-void EncodeMsg_AHRS(ROHS_tbl* p_rohs, BNO080_tbl* p_bno, LPS22HH_tbl_t* p_lps)
+void EncodeMsg_AHRS(ROHS_tbl* p_rohs)
 {
   BNO080_Angle_tbl* p_bno_angle = &p_bno->BNO080_Angle;
   p_rohs->txBuf[0] = 0x46;
   p_rohs->txBuf[1] = 0x43;
   p_rohs->txBuf[2] = AHRS_MSG;
 
-  p_rohs->txBuf[3] = (short)(p_bno_angle->Roll*100);
-  p_rohs->txBuf[4] = ((short)(p_bno_angle->Roll*100))>>8;
+  p_rohs->txBuf[3] = (short)(Sensor_data->Roll*100);
+  p_rohs->txBuf[4] = ((short)(Sensor_data->Roll*100))>>8;
 
-  p_rohs->txBuf[5] = (short)(p_bno_angle->Roll*100);
-  p_rohs->txBuf[6] = ((short)(p_bno_angle->Roll*100))>>8;
+  p_rohs->txBuf[5] = (short)(Sensor_data->Roll*100);
+  p_rohs->txBuf[6] = ((short)(Sensor_data->Roll*100))>>8;
 
-  p_rohs->txBuf[7] = (unsigned short)(p_bno_angle->Yaw*100);
-  p_rohs->txBuf[8] = ((unsigned short)(p_bno_angle->Yaw*100))>>8;
+  p_rohs->txBuf[7] = (unsigned short)(Sensor_data->Yaw*100);
+  p_rohs->txBuf[8] = ((unsigned short)(Sensor_data->Yaw*100))>>8;
 
-  p_rohs->txBuf[9] =  (short)(p_lps->baroAltFilt*10);
-  p_rohs->txBuf[10] = ((short)(p_lps->baroAltFilt*10))>>8;
+  p_rohs->txBuf[9] =  (short)(Sensor_data->baroAltFilt*10);
+  p_rohs->txBuf[10] = ((short)(Sensor_data->baroAltFilt*10))>>8;
 
   p_rohs->txBuf[11] = 0;//(short)((iBus.RH-1500)*0.1f*100);
   p_rohs->txBuf[12] = 0;//((short)((iBus.RH-1500)*0.1f*100))>>8;
@@ -76,7 +77,7 @@ void EncodeMsg_AHRS(ROHS_tbl* p_rohs, BNO080_tbl* p_bno, LPS22HH_tbl_t* p_lps)
   }
 }
 
-void MsgEncode_GPS(ROHS_tbl* p_rohs, M8N_tbl* p_m8n)
+void MsgEncode_GPS(void)
 {
   M8N_UBX_NAV_POSLLH* p_poslh = &p_m8n->posllh;
   p_rohs->txBuf[0] = 0x46;
@@ -84,15 +85,15 @@ void MsgEncode_GPS(ROHS_tbl* p_rohs, M8N_tbl* p_m8n)
 
   p_rohs->txBuf[2] = GPS_MSG;
 
-  p_rohs->txBuf[3] = p_poslh->lat;
-  p_rohs->txBuf[4] = p_poslh->lat>>8;
-  p_rohs->txBuf[5] = p_poslh->lat>>16;
-  p_rohs->txBuf[6] = p_poslh->lat>>24;
+  p_rohs->txBuf[3] = Sensor_data->lat;
+  p_rohs->txBuf[4] = Sensor_data->lat>>8;
+  p_rohs->txBuf[5] = Sensor_data->lat>>16;
+  p_rohs->txBuf[6] = Sensor_data->lat>>24;
 
-  p_rohs->txBuf[7] = p_poslh->lon;
-  p_rohs->txBuf[8] = p_poslh->lon>>8;
-  p_rohs->txBuf[9] = p_poslh->lon>>16;
-  p_rohs->txBuf[10] = p_poslh->lon>>24;
+  p_rohs->txBuf[7]  = Sensor_data->lon;
+  p_rohs->txBuf[8]  = Sensor_data->lon>>8;
+  p_rohs->txBuf[9]  = Sensor_data->lon>>16;
+  p_rohs->txBuf[10] = Sensor_data->lon>>24;
 
   p_rohs->txBuf[11] = 0;//(unsigned short)(batVolt*100);
   p_rohs->txBuf[12] = 0;//((unsigned short)(batVolt*100))>>8;

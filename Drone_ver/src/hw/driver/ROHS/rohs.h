@@ -5,8 +5,8 @@
  *      Author: yougang
  */
 
-#ifndef SRC_HW_TELEMETRY_ROHS_ROHS_H_
-#define SRC_HW_TELEMETRY_ROHS_ROHS_H_
+#ifndef SRC_HW_TELEMETERY_ROHS_ROHS_H_
+#define SRC_HW_TELEMETERY_ROHS_ROHS_H_
 
 
 #include "hw_def.h"

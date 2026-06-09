@@ -8,6 +8,9 @@
 #ifndef SRC_HW_HW_H_
 #define SRC_HW_HW_H_
 
+#include "fs-ia6b.h"
+#include "m8n.h"
+#include "rohs.h"
 #include "hw_def.h"
 #include "uart.h"
 #include "led.h"
@@ -19,13 +22,11 @@
 #include "rtc.h"
 #include "reset.h"
 #include "cli.h"
+#include "flash.h"
 
-#include "FS-iA6B/fs-ia6b.h"
-#include "M8N/m8n.h"
-#include "ICM20602/ICM20602.h"
-#include "LPS22HH/LPS22HH.h"
-#include "BNO080/BNO080.h"
-#include "ROHS/rohs.h"
+#include "ICM20602.h"
+#include "LPS22HH.h"
+#include "BNO080.h"
 #include "AT24C08.h"
 //#include "service/Servicemsg.h"
 void hwInit(void);

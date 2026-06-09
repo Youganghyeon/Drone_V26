@@ -5,15 +5,16 @@
  *      Author: yougang
  */
 
-#ifndef SRC_HW_TELEMETRY_FS_IA6B_FS_IA6B_H_
-#define SRC_HW_TELEMETRY_FS_IA6B_FS_IA6B_H_
+#ifndef SRC_HW_TELEMETERY_FS_IA6B_FS_IA6B_H_
+#define SRC_HW_TELEMETERY_FS_IA6B_FS_IA6B_H_
 
 #include "hw_def.h"
 #ifdef _USE_HW_FSIA6B
-#define     SW_A      0
-#define     SW_B      1
-#define     SW_C      2
-#define     SW_D      3
+#define     SW_A      HW_DEF_FSIA6B_SW_A
+#define     SW_B      HW_DEF_FSIA6B_SW_B
+#define     SW_C      HW_DEF_FSIA6B_SW_C
+#define     SW_D      HW_DEF_FSIA6B_SW_D
+#define     SW_MAX    HW_DEF_FSIA6B_SW_MAX_CH
 
 typedef struct
 {
@@ -24,11 +25,9 @@ typedef struct
   uint16_t SW[4];
   uint16_t VrA;
   uint16_t VrB;
-
   uint8_t rxBuf[32];
   uint16_t checksum;
   bool    ibus_rx_cplt_flag;
-
   uint8_t FailSafe;
   bool    isOpen;
 }FSiA6B_tbl;

@@ -64,4 +64,12 @@
 
 #define HW_MAX_I2C_CH         1
 #define HW_DEF_I2C1           0
+
+#define HW_DEF_FSIA6B_SW_MAX_CH 4
+#define HW_DEF_FSIA6B_SW_A      0
+#define HW_DEF_FSIA6B_SW_B      1
+#define HW_DEF_FSIA6B_SW_C      2
+#define HW_DEF_FSIA6B_SW_D      3
+
+
 #endif /* SRC_HW_HW_DEF_H_ */
