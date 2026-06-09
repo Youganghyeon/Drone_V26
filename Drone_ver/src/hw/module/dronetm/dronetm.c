@@ -24,8 +24,7 @@ bool droneTmInit(void)
   return ret;
 }
 
-void
-(void)
+void droneTmUpdate(void)
 {
   FSIA6B_RecivePacket(&IA6B);
   if(IA6B.ibus_rx_cplt_flag == 1)
