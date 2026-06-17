@@ -37,5 +37,11 @@ Single_PID_tbl inner;   //angular velceity
 Single_PID_tbl outer;   // angle
 }Double_PID_tbl;
 
+void Double_PID_Calc(Double_PID_tbl* axis, float set_point_angle, float angle/*BNO080 Rotation Angle*/, float rate/*ICM-20602 Angular Rate*/);
+void Single_PID_Yaw_Heading_Calc(Single_PID_tbl* axis, float set_point_angle, float angle/*BNO080 Rotation Angle*/, float rate/*ICM-20602 Angular Rate*/);
+void Single_PID_Yaw_Rate_Calc(Single_PID_tbl* axis, float set_point_rate, float rate/*ICM-20602 Angular Rate*/);
+void Reset_PID_Integrator(Single_PID_tbl* axis);
+void Reset_All_PID_Integrator(Double_PID_tbl* p_roll, Double_PID_tbl* p_pitch,Single_PID_tbl* p_yaw_heading, Single_PID_tbl* p_yaw_rate);
+
 #endif
 #endif /* SRC_COMMON_CORE_PID_H_ */

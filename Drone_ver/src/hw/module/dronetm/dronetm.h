@@ -10,11 +10,11 @@
 
 #include "hw_def.h"
 
-#define DEF_SW_MAX    SW_MAX
-#define DEF_SwA       SW_A
-#define DEF_SwB       SW_B
-#define DEF_SwC       SW_C
-#define DEF_SwD       SW_D
+#define DEF_SW_MAX    HW_DEF_FSIA6B_SW_MAX_CH
+#define DEF_SwA       HW_DEF_FSIA6B_SW_A
+#define DEF_SwB       HW_DEF_FSIA6B_SW_B
+#define DEF_SwC       HW_DEF_FSIA6B_SW_C
+#define DEF_SwD       HW_DEF_FSIA6B_SW_D
 
 typedef enum{
   Switch_high,
@@ -35,11 +35,12 @@ typedef struct
   uint16_t knob_B;            // VrB -> 가변 저항 노브 B
   uint8_t  failsafe_status;    // 페일세이프 상태
   bool     is_connected;       // 연결 여부 (isOpen 변경)
+  bool     is_Received;
 }DroneTm_tbl;
 
 
 void droneTmUpdate(void);
 bool droneTmInit(void);
-DroneTm_tbl* droneGetData(void);
-
+DroneTm_tbl* droneLinkData(void);
+bool IsdroneTmInit(void);
 #endif /* HW_MODULE_DRONETM_DRONETM_H_ */

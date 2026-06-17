@@ -11,14 +11,13 @@
 #include "sensor.h"
 #include "dronetm.h"
 #include "AT24C08.h"
+#include "gscMsg.h"
+static gscTm_tbl       Service_msg;
+static DroneTm_tbl*    droneTm_data;
+static Sensor_tbl*     Sensor_data;
+static bool isinit   = false;
 
-gscTm_tbl       Service_msg;
-DroneTm_tbl*     droneTm_data;
-Sensor_tbl*      Sensor_data;
-
-static bool isinit = false;
-
-void ServiceMsg_Init(void)
+bool ServiceMsg_Init(void)
 {
   bool ret = false;
   bool s_ret = false;
@@ -28,9 +27,9 @@ void ServiceMsg_Init(void)
     Sensor_data = sensorGetData();
     s_ret = true;
   }
-  if(isdroneTmInit() == true)
+  if(IsdroneTmInit() == true)
   {
-    droneTm_data = droneGetData();
+    droneTm_data = droneLinkData();
     d_ret = true;
    }
 
@@ -42,24 +41,26 @@ void ServiceMsg_Init(void)
   return ret;
 }
 
+static uint8_t txBuf[20];
+
 void EncodeMsg_AHRS(void)
 {
-  uint8_t txBuf[20];
+
   txBuf[0] = 0x46;
   txBuf[1] = 0x43;
-  txBuf[2] = AHRS_MSG;
+  txBuf[2] = 0x10;
 
-  txBuf[3] = (short)(Sensor_data->Roll*100);
-  txBuf[4] = ((short)(Sensor_data->Roll*100))>>8;
+  txBuf[3] = (short)(Sensor_data->roll*100.0f);
+  txBuf[4] = ((short)(Sensor_data->roll*100.0f))>>8;
 
-  txBuf[5] = (short)(Sensor_data->Roll*100);
-  txBuf[6] = ((short)(Sensor_data->Roll*100))>>8;
+  txBuf[5] = (short)(Sensor_data->pitch*100.0f);
+  txBuf[6] = ((short)(Sensor_data->pitch*100.0f))>>8;
 
-  txBuf[7] = (unsigned short)(Sensor_data->Yaw*100);
-  txBuf[8] = ((unsigned short)(Sensor_data->Yaw*100))>>8;
+  txBuf[7] = (unsigned short)(Sensor_data->yaw*100.0f);
+  txBuf[8] = ((unsigned short)(Sensor_data->yaw*100.0f))>>8;
 
-  txBuf[9] =  (short)(Sensor_data->baroAltFilt*10);
-  txBuf[10] = ((short)(Sensor_data->baroAltFilt*10))>>8;
+  txBuf[9] =  (short)(Sensor_data->alt_filt*10.0f);
+  txBuf[10] = ((short)(Sensor_data->alt_filt*10.0f))>>8;
 
   txBuf[11] = (short)((droneTm_data->setRoll - 1500)*0.1f*100);
   txBuf[12] = ((short)((droneTm_data->setRoll - 1500)*0.1f*100))>>8;
@@ -67,8 +68,8 @@ void EncodeMsg_AHRS(void)
   txBuf[13] = (short)((droneTm_data->setPitch - 1500)*0.1f*100);
   txBuf[14] = ((short)((droneTm_data->setPitch - 1500)*0.1f*100))>>8;
 
-  txBuf[15] = (unsigned short)((droneTm_data->setPitch -1000)*0.36f*100);
-  txBuf[16] = ((unsigned short)((droneTm_data->setPitch - 1000)*0.36f*100))>>8;
+  txBuf[15] = (unsigned short)((droneTm_data->setyaw -1000)*0.36f*100);
+  txBuf[16] = ((unsigned short)((droneTm_data->setyaw - 1000)*0.36f*100))>>8;
 
   txBuf[17] = 0x00;
   txBuf[18] = 0x00;
@@ -103,10 +104,10 @@ void MsgEncode_GPS(void)
   txBuf[11] = 0;//(unsigned short)(batVolt*100);
   txBuf[12] = 0;//((unsigned short)(batVolt*100))>>8;
 
-  txBuf[13] = 0;//iBus.SwA == 1000 ? 0 : 1;
-  txBuf[14] = 0;//iBus.SwC == 1000 ? 0 : iBus.SwC == 1500 ? 1 : 2;
+  txBuf[13] = droneTm_data->switch_ch[DEF_SwA] == 1000 ? 0 : 1;
+  txBuf[14] = droneTm_data->switch_ch[DEF_SwC] == 1000 ? 0 : droneTm_data->switch_ch[DEF_SwC] == 1500 ? 1 : 2;
 
-  txBuf[15] = 0;//iBus_isFailsafe(&iBus);
+  txBuf[15] = droneTm_data->failsafe_status;
 
   txBuf[16] = 0x00;
   txBuf[17] = 0x00;
@@ -123,7 +124,6 @@ void MsgEncode_GPS(void)
 
 void MsgEncode_PID_Gain(uint8_t id, float p, float i, float d)
 {
-  uint8_t txBuf[20];
   txBuf[0] = 0x46;
   txBuf[1] = 0x43;
 

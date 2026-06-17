@@ -26,6 +26,12 @@ typedef struct{
   int32_t height;
 }Sensor_tbl;
 
+#define        SENOSR_MAX_CH      HW_SENSOR_MAX_CH
+#define        DEF_SENSOR1       _DEF_HW_ICM20602
+#define        DEF_SENSOR2       _DEF_HW_BNO080
+#define        DEF_SENSOR3       _DEF_HW_LPS22HH
+
+
 bool           sensorInit(void);
 void           sensorUpdate(void);
 Sensor_tbl*    sensorGetData(void);

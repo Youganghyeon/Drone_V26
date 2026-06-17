@@ -116,6 +116,4 @@ bool FSIA6B_isFailsafe(FSiA6B_tbl* iBus)
   return iBus->FailSafe != 0;
 }
 
-
-
 #endif

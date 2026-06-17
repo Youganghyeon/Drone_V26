@@ -20,6 +20,7 @@
 
 
 bool ledInit(void);
+bool isledInit(void);
 bool ledOn(uint8_t ch);
 bool ledOff(uint8_t ch);
 bool ledToggle(uint8_t ch);

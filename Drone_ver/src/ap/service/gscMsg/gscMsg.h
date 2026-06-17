@@ -13,7 +13,7 @@
 
 typedef enum{
   NONE    = 0x00,
-  AHRS_MSG,
+  AHRS_MSG = 0x10,
   GPS_MSG,
   PID_Gain_MSG
 }Service_MsgType;
@@ -21,10 +21,11 @@ typedef enum{
 #define DEF_MAX_SERVICE_MSG   1
 #define DEF_SERVICE_MSG1      0
 
-void ServiceMsg_Init(void);
+bool ServiceMsg_Init(void);
 void EncodeMsg_AHRS(void);
-void MsgEncode_GPS(void);
 void MsgEncode_PID_Gain(uint8_t id, float p, float i, float d);
+
+//void MsgEncode_GPS(void);
 
 
 #endif /* AP_SERVICE_GCSMSG_GSCMSG_H_ */

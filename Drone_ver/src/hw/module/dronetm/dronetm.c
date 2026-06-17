@@ -13,6 +13,7 @@
 #define Switch_Convert(x)   ((x) < 1300 ? Switch_low : ((x) < 1700 ? Switch_IDLE : Switch_high))
 static FSiA6B_tbl     IA6B;
 static DroneTm_tbl Drone_Tm;
+static bool isInit = false;
 
 bool droneTmInit(void)
 {
@@ -20,8 +21,14 @@ bool droneTmInit(void)
   if(FSIA6B_Open(&IA6B)==true)
   {
     ret= true;
+    isInit=true;
   }
   return ret;
+}
+
+bool IsdroneTmInit(void)
+{
+  return isInit;
 }
 
 void droneTmUpdate(void)
@@ -45,12 +52,13 @@ void droneTmUpdate(void)
       Drone_Tm.knob_B = IA6B.VrB;
       Drone_Tm.failsafe_status = FSIA6B_isFailsafe(&IA6B);
       Drone_Tm.is_connected = IA6B.isOpen;
+      Drone_Tm.is_Received =  true;
     }
   }
 }
 
 
-DroneTm_tbl* droneGetData(void)
+DroneTm_tbl* droneLinkData(void)
 {
   return &Drone_Tm;
 }

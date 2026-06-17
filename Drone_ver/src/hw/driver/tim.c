@@ -29,9 +29,9 @@ typedef struct {
 } TIM_Base_tbl;
 
 typedef struct {
-  bool     Flag_1ms;
-  bool     Flag_20ms;
-  uint32_t counter_20ms;
+ volatile bool     Flag_1ms;
+ volatile bool     Flag_20ms;
+ volatile uint32_t counter_20ms;
 } TIMER_Flag_tbl;
 
 typedef struct {
@@ -81,6 +81,26 @@ void timInit(void)
   }
 }
 
+bool istimOpen(uint8_t ch)
+{
+  uint8_t idx = TIM_GET_INDEX(ch);
+  if (TIM_IS_TIMER(ch))
+  {
+    if (idx >= TIMER_MAX_CH)
+    {
+      return false;
+    }
+    return timer_tbl[ch].tim.isOpen;
+  }
+  else
+  {
+    if (idx >= PWM_MAX_CH)
+    {
+      return false;
+    }
+    return pwm_tbl[ch].tim.isOpen;
+  }
+}
 
 bool timOpen(uint8_t ch)
 {
@@ -125,6 +145,7 @@ static bool pwmOpen(uint8_t hw_ch)
       if (HAL_TIM_PWM_ConfigChannel(p_handle, &sConfigOC, p_tim->channel) != HAL_OK) { Error_Handler(); }
       HAL_TIM_MspPostInit(p_handle);
       p_tim->isOpen = true;
+      HAL_TIM_PWM_Start(p_tim->htim, p_tim->channel);
       break;
 
     case HW_DEF_TIM5_CH1:
@@ -155,6 +176,7 @@ static bool pwmOpen(uint8_t hw_ch)
       if (HAL_TIM_PWM_ConfigChannel(p_handle, &sConfigOC, p_tim->channel) != HAL_OK) { Error_Handler(); }
       HAL_TIM_MspPostInit(p_handle);
       p_tim->isOpen = true;
+      HAL_TIM_PWM_Start(p_tim->htim, p_tim->channel);
       break;
 
     default:
@@ -270,7 +292,7 @@ bool pwmChange(uint8_t ch, uint32_t ccr)
   }
   if(ret==true)
   {
-      TIM_Base_tbl* p_tim = &pwm_tbl[idx].tim;
+    TIM_Base_tbl* p_tim = &pwm_tbl[idx].tim;
     __HAL_TIM_SET_COMPARE(p_tim->htim, p_tim->channel, ccr);
   }
   return ret;

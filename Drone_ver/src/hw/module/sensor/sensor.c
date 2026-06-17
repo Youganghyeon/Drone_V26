@@ -43,7 +43,7 @@ void sensorUpdate(void)
 {
   if(is_init != true) return;
 
- /* if(LPS22HH_GetInfo(&LPS22HH, LPS22HH_GetPress)==true)
+  if(LPS22HH_GetInfo(&LPS22HH, LPS22HH_GetPress)==true)
   {
     LPS22HH_GetAlt(&LPS22HH, TEMP_CORRECT);
     LPS22HH_GetAltFilt(&LPS22HH);
@@ -60,7 +60,6 @@ void sensorUpdate(void)
     sensor_data.gyro_z      = ICM20602.gyro_z;
 
   }
-*/
   if(BNO080_ReadInfo(&BNO080)==true)
   {
     sensor_data.roll        = BNO080.BNO080_Angle.Roll;

@@ -141,18 +141,14 @@ void EP_PIDGain_Write(uint8_t id, float PGain, float IGain, float DGain)
   }
 }
 
+
 bool EP_PIDGain_Read(PID_Angle id, float* PGain, float* IGain, float* DGain)
 {
-  unsigned char buf_read[16];
+  uint8_t buf_read[16];
   Parser parser;
-  if(id==PID_All)
-  {
-    for(int i=0; i<id; i++)
-    {
-      AT24C08_PageRead((uint8_t)i, &buf_read[0], 16);
-    }
-  }
+
   AT24C08_PageRead((uint8_t)id, &buf_read[0], 16);
+
   uint8_t chksum = 0xff;
   for(int i=0;i<15;i++) chksum -= buf_read[i];
 

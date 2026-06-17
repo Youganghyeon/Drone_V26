@@ -28,21 +28,20 @@
 #define PWM_MAX_CH               HW_PWM_MAX_CH
 #define TIMER_MAX_CH             HW_TIMER_MAX_CH
 
-#define TIM_TYPE_PWM_FLAG        (0x00)
-#define TIM_TYPE_TIMER_FLAG      (0x80)
+#define TIM_TYPE_PWM_FLAG        HW_TIM_TYPE_PWM_FLAG
+#define TIM_TYPE_TIMER_FLAG      HW_TIM_TYPE_TIMER_FLAG
 
-#define    TIM_IS_TIMER(ch)     (ch & 0x80)
+#define TIM_IS_TIMER(ch)         HW_TIM_IS_TIMER(ch)
+#define TIM_GET_INDEX(ch)        HW_TIM_GET_INDEX(ch)
 
-#define    TIM_GET_INDEX(ch)    (ch & 0x7F)
 
+#define TIM3_CH4                 DEF_TIM3_CH4
+#define TIM5_CH1                 DEF_TIM5_CH1
+#define TIM5_CH2                 DEF_TIM5_CH2
+#define TIM5_CH3                 DEF_TIM5_CH3
+#define TIM5_CH4                 DEF_TIM5_CH4
 
-#define    DEF_TIM3_CH4         (TIM_TYPE_PWM_FLAG   | HW_DEF_TIM3_CH4)
-#define    DEF_TIM5_CH1         (TIM_TYPE_PWM_FLAG   | HW_DEF_TIM5_CH1)
-#define    DEF_TIM5_CH2         (TIM_TYPE_PWM_FLAG   | HW_DEF_TIM5_CH2)
-#define    DEF_TIM5_CH3         (TIM_TYPE_PWM_FLAG   | HW_DEF_TIM5_CH3)
-#define    DEF_TIM5_CH4         (TIM_TYPE_PWM_FLAG   | HW_DEF_TIM5_CH4)
-
-#define    DEF_TIM7             (TIM_TYPE_TIMER_FLAG | HW_DEF_TIM7)
+#define TIM7_TIMER               DEF_TIM7
 
 
 
@@ -50,6 +49,7 @@
 
 void timInit(void);
 bool timOpen(uint8_t ch);
+bool istimOpen(uint8_t ch);
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle);
 bool pwmStart(uint8_t ch);
 bool pwmChange(uint8_t ch, uint32_t ccr);

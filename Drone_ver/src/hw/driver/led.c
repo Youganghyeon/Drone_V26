@@ -24,12 +24,17 @@ led_tbl_t led_tbl[LED_MAX] = {
     {GPIOC,LED_3_Pin,GPIO_PIN_SET,GPIO_PIN_RESET}
 };
 
+static bool isInit = false;
 bool ledInit(void)
 {
-  bool ret=true;
-   return ret;
+  bool isInit=true;
+  return isInit;
 }
 
+bool isledInit(void)
+{
+  return isInit;
+}
 bool ledOn(uint8_t ch)
 {
   bool ret=true;

@@ -41,10 +41,6 @@
 #define IN_ERR_SUM_MAX 500
 #define IN_I_ERR_MIN -IN_ERR_SUM_MAX
 
-Double_PID_tbl roll;
-Double_PID_tbl pitch;
-Single_PID_tbl yaw_heading;
-Single_PID_tbl yaw_rate;
 
 
 void Double_PID_Calc(Double_PID_tbl* axis, float set_point_angle, float angle/*BNO080 Rotation Angle*/, float rate/*ICM-20602 Angular Rate*/)
@@ -158,13 +154,13 @@ void Reset_PID_Integrator(Single_PID_tbl* axis)
   axis->error_sum = 0;
 }
 
-void Reset_All_PID_Integrator(void)
+void Reset_All_PID_Integrator(Double_PID_tbl* p_roll, Double_PID_tbl* p_pitch,Single_PID_tbl* p_yaw_heading, Single_PID_tbl* p_yaw_rate)
 {
-  Reset_PID_Integrator(&roll.inner);
-  Reset_PID_Integrator(&roll.outer);
-  Reset_PID_Integrator(&pitch.inner);
-  Reset_PID_Integrator(&pitch.outer);
-  Reset_PID_Integrator(&yaw_heading);
-  Reset_PID_Integrator(&yaw_rate);
+  Reset_PID_Integrator(&p_roll->inner);
+  Reset_PID_Integrator(&p_pitch->outer);
+  Reset_PID_Integrator(&p_pitch->inner);
+  Reset_PID_Integrator(&p_pitch->outer);
+  Reset_PID_Integrator(p_yaw_heading);
+  Reset_PID_Integrator(p_yaw_rate);
 }
 #endif

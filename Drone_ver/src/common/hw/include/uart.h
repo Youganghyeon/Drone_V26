@@ -28,6 +28,7 @@ uint32_t    uartWrite(uint8_t ch, uint8_t *buf, uint32_t length);
 uint32_t    uartAvailable(uint8_t ch);
 uint32_t    uartPrintf(uint8_t ch, const char* fmt,...);
 uint32_t    uartWrite_IT(uint8_t ch, uint8_t *buf, uint32_t length);
+uint32_t    uartWrite_DMA(uint8_t ch, uint8_t *buf, uint32_t length);
 #endif
 
 #endif /* SRC_COMMON_HW_INCLUDE_UART_H_ */

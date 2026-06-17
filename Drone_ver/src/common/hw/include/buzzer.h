@@ -12,9 +12,11 @@
 
 #ifdef _USE_HW_BUZZER
 
+#define  DEF_BUZZER1  DEF_TIM3_CH4
 
 bool    buzInit(void);
-bool    buzSetPitch(uint32_t pitch);
+bool    isBuzInit(void);
+bool    buzSetPitch(uint8_t ch, uint32_t pitch);
 bool    buzDeinit(void);
 
 #endif
