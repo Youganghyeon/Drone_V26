@@ -245,9 +245,9 @@ bool BNO080_Open(BNO080_tbl* p_sensor);
 void BNO080_parseCommandReport(BNO080_tbl* p_sensor);
 void BNO080_parseInputReport(BNO080_tbl* p_sensor);
 //void BNO080_enableRotationVector(uint16_t timeBetweenReports);
-//void BNO080_enableGameRotationVector(BNO080_tbl* p_sensor, uint16_t timeBetweenReports);
+void BNO080_enableGameRotationVector(BNO080_tbl* p_sensor, uint16_t timeBetweenReports);
 void BNO080_calibrateAll();
-void BNO080_enableMagnetometer(uint16_t timeBetweenReports);
+void BNO080_enableMagnetometer(BNO080_tbl* p_sensor, uint16_t timeBetweenReports);
 void BNO080_saveCalibration();
 void BNO080_requestCalibrationStatus();
 bool BNO080_calibrationComplete(BNO080_tbl* p_sensor);
@@ -260,6 +260,7 @@ float BNO080_getValue(BNO080_tbl* p_sensor, getMode_t mode, getValue_t value);
 bool BNO080_ReadInfo(BNO080_tbl* p_sensor);
 bool BNO080_Update(float* q, BNO080_tbl* p_sensor);
 void BNO080_enableRotationVector(BNO080_tbl* p_sensor, uint16_t timeBetweenReports);
+bool BNO080_Calibration(BNO080_tbl* p_bno080, uint8_t isCaliOk);
 #if 0
 
 float BNO080_getAccelX();

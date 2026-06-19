@@ -36,4 +36,5 @@ bool           sensorInit(void);
 void           sensorUpdate(void);
 Sensor_tbl*    sensorGetData(void);
 bool           isSensorInit(void);
+void sensorCalibration(uint8_t isCalibration_OK);
 #endif /* SRC_HW_SENSOR_SENSOR_H_ */

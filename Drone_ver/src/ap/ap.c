@@ -26,13 +26,13 @@ Single_PID_tbl yaw_heading;
 Single_PID_tbl yaw_rate;
 
 static DroneTm_tbl* droneTm;
-
+static Sensor_tbl* sensor_data;
 void apInit(void)
 {
   /*------------------UART------------------*/
   uartOpen(DEF_UART1, 115200);  // ROHS
-  uartOpen(DEF_UART5, 115200);    //FSi6AB uart
-  //uartOpen(DEF_UART6, 9600);    //PC uart
+  uartOpen(DEF_UART5, 115200);  //FSi6AB uart
+  uartOpen(DEF_UART6, 9600);    //PC uart
   // cliOpen(DEF_UART6, 9600);
   uartOpen(DEF_UART4, 115200);
 
@@ -64,6 +64,7 @@ void apInit(void)
   /*------------------Module------------------*/
   sensorInit();
 
+
   gcsTmInit();
 
   droneTmInit();
@@ -76,7 +77,6 @@ void apInit(void)
   escOpen(DEF_ESC4);
 
   AT24C08_Open();
-
 
   /*------------------Service------------------*/
   ServiceMsg_Init();
@@ -128,7 +128,11 @@ void apInit(void)
   }
   else if(droneTm->switch_ch[DEF_SwC] == Switch_IDLE)
   {
-
+    while(droneTm->switch_ch[DEF_SwC] == Switch_IDLE)
+    {
+      sensorCalibration(1);
+    }
+    sensorCalibration(2);
   }
 
 }
@@ -151,11 +155,6 @@ void apMain(void)
     sensorUpdate();
     droneTmUpdate();
 
-    if(Is20msFlag(DEF_TIM7)==1)
-    {
-      EncodeMsg_AHRS();
-      clear20msFlag(DEF_TIM7);
-    }
     if(droneTm->is_Received == true && (!droneTm->failsafe_status))
     {
       uint32_t output = (uint32_t)(10500  + (droneTm->setthrottle - 1000) * 10.5);
@@ -163,6 +162,16 @@ void apMain(void)
       escOutput(DEF_ESC2, output);
       escOutput(DEF_ESC3, output);
       escOutput(DEF_ESC4, output);
+    }
+    if(Is1msFlag(DEF_TIM7))
+    {
+      clear1msFlag(DEF_TIM7);
+    }
+
+    if(Is20msFlag(DEF_TIM7))
+    {
+      EncodeMsg_AHRS();
+      clear20msFlag(DEF_TIM7);
     }
     //cliMain();
   }

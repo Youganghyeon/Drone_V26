@@ -39,6 +39,12 @@ bool isSensorInit(void)
 {
   return is_init;
 }
+
+void sensorCalibration(uint8_t isCalibration_OK)
+{
+  BNO080_Calibration(&BNO080,isCalibration_OK);
+}
+
 void sensorUpdate(void)
 {
   if(is_init != true) return;
