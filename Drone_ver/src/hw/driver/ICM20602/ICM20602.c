@@ -11,6 +11,7 @@
 #ifdef _USE_HW_ICM20602
 #define DEF_ICM20602   DEF_HW_ICM20602
 
+short gyro_x_offset = 1, gyro_y_offset = -23, gyro_z_offset = -3;
 static bool  ICM20602_Readbyte(uint8_t reg_addr, uint8_t* rx_data);
 static void  ICM20602_Readbytes_DMA(ICM20602_Buf_tbl* p_buf, uint8_t reg_addr, uint8_t len, ICM_MODE_STATE type);
 static void  ICM20602_Writebyte(uint8_t reg_addr, uint8_t val);
@@ -128,6 +129,17 @@ bool ICM20602_Open(ICM20602_tbl_t* p_sensor)
   return ret;
 }
 
+bool ICM20602_Calibration(short gyro_x_offset, short gyro_y_offset, short gyro_z_offset)
+{
+  ICM20602_Writebyte(0x13, (gyro_x_offset*-2)>>8);
+  ICM20602_Writebyte(0x14, (gyro_x_offset*-2));
+
+  ICM20602_Writebyte(0x15, (gyro_y_offset*-2)>>8);
+  ICM20602_Writebyte(0x16, (gyro_y_offset*-2));
+
+  ICM20602_Writebyte(0x17, (gyro_z_offset*-2)>>8);
+  ICM20602_Writebyte(0x18, (gyro_z_offset*-2));
+}
 /*
 bool ICM20602_GetInfo(ICM20602_tbl_t* p_sensor, uint8_t state)
 {

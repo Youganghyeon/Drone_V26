@@ -26,6 +26,12 @@ typedef struct{
   int32_t height;
 }Sensor_tbl;
 
+typedef enum{
+  BNO080_Cali_Step1 = 0x01,
+  BNO080_Cali_Step2,
+  ICM20602_Cali
+}Calibration_Sensor_Type;
+
 #define        SENOSR_MAX_CH      HW_SENSOR_MAX_CH
 #define        DEF_SENSOR1       _DEF_HW_ICM20602
 #define        DEF_SENSOR2       _DEF_HW_BNO080
@@ -36,5 +42,6 @@ bool           sensorInit(void);
 void           sensorUpdate(void);
 Sensor_tbl*    sensorGetData(void);
 bool           isSensorInit(void);
-void sensorCalibration(uint8_t isCalibration_OK);
+void           sensorCalibration(Calibration_Sensor_Type isCalibration_OK);
+
 #endif /* SRC_HW_SENSOR_SENSOR_H_ */

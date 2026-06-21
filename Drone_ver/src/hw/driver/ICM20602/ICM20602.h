@@ -173,5 +173,6 @@ void     parsing_6AxisRawData(short* accel, short* gyro, ICM20602_RxPacket_tbl* 
 void     parsing_3AxisGyroRawData(short* gyro, ICM20602_RxPacket_tbl* p_rx);
 void     parsing_Get3AxisAccRawData(short* accel, ICM20602_RxPacket_tbl* p_rx);
 bool     ICM20602_GetInfo(ICM20602_tbl_t* p_sensor, uint8_t state);
+bool     ICM20602_Calibration(short gyro_x_offset, short gyro_y_offset, short gyro_z_offset);
 #endif
 #endif /* SRC_COMMON_HW_INCLUDE_ICM20602_H_ */

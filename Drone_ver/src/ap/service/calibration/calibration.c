@@ -6,6 +6,7 @@
  */
 
 
+#if 0
 #include "calibration.h"
 
 void Calibration_sensor(void)

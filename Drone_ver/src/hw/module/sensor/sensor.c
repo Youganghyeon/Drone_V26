@@ -40,9 +40,19 @@ bool isSensorInit(void)
   return is_init;
 }
 
-void sensorCalibration(uint8_t isCalibration_OK)
+
+void sensorCalibration(Calibration_Sensor_Type isCalibration_OK)
 {
-  BNO080_Calibration(&BNO080,isCalibration_OK);
+  if((isCalibration_OK == BNO080_Cali_Step1) || (isCalibration_OK == BNO080_Cali_Step2))
+  {
+    BNO080_Calibration(&BNO080, isCalibration_OK);
+  }
+  if(isCalibration_OK == ICM20602_Cali)
+  {
+    short gyro_x_offset = 1, gyro_y_offset = -23, gyro_z_offset = -3;
+    ICM20602_Calibration(gyro_x_offset, gyro_y_offset, gyro_z_offset);
+  }
+
 }
 
 void sensorUpdate(void)
