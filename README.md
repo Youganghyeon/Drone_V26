@@ -2,8 +2,9 @@
 
 ## 2 STEP SPI DMA
 
-## 3 STEP RTOS
+## 3 Flying
 
-## 4 STEP HEXA
+// Not yet
+## 4 STEP RTOS
 
-## 5 STEP Zephyr RTOS
+## 5 STEP HEXA
