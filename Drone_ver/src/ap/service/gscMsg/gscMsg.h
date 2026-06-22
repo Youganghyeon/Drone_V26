@@ -9,6 +9,7 @@
 #define AP_SERVICE_GCSMSG_GSCMSG_H_
 
 
+#include "module.h"
 #include "hw_def.h"
 
 typedef enum{

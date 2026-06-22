@@ -7,7 +7,7 @@
 
 
 
-#include "gsc_tm.h"
+#include <gcstm.h>
 #include "sensor.h"
 #include "dronetm.h"
 #include "AT24C08.h"

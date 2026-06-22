@@ -6,8 +6,8 @@
  */
 
 
-#include "gsc_tm.h"
-#include "gsc_tm.h"
+#include <gcstm.h>
+#include <gcstm.h>
 #include "rohs.h"
 #include "uart.h" // DEF_UART1 사용을 위함
 

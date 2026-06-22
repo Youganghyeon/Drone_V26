@@ -6,10 +6,8 @@
  */
 
 
-#include "dronetm.h"
-#include "ap.h"#include "gsc_tm.h"
-#include "sensor.h"
-#include "esc.h"
+#include "ap.h"
+#include "module.h"
 #include "service/gscMsg/gscMsg.h"
 #include "pid.h"
 
@@ -112,11 +110,13 @@ void apInit(void)
   {
 
   }
+
   /*------------------2. Ready until droneTm is connect------------------*/
   while(droneTm->is_Received != true)
   {
     droneTmUpdate();
   }
+
   /*------------------According to SwC, do a calibration_task------------------*/
   if(droneTm->switch_ch[DEF_SwC] == Switch_high)
   {
@@ -135,6 +135,7 @@ void apInit(void)
     sensorCalibration(BNO080_Cali_Step2);
   }
 
+
 }
 
 static float    BatVolt=0.0;
@@ -146,14 +147,15 @@ void apMain(void)
   adcReceive_DMA(DEF_ADC1, (uint32_t*)&adcVolt, 1);
   while(1)
   {
+    sensorUpdate();
+    droneTmUpdate();
+
     if(millis()-premillis>=500)
     {
       ledToggle(DEF_LED_2);
       ledToggle(DEF_LED_3);
       premillis=millis();
     }
-    sensorUpdate();
-    droneTmUpdate();
 
     if(droneTm->is_Received == true && (!droneTm->failsafe_status))
     {
@@ -175,59 +177,6 @@ void apMain(void)
       clear20msFlag(DEF_TIM7);
     }
     //cliMain();
+    //    BatVolt = adcVolt * 0.003619f;
   }
-
-//
-//    LPS22HH_GetInfo(&LPS22HH,LPS22HH_GetPress);
-//    LPS22HH_GetAlt(&LPS22HH, TEMP_CORRECT);
-//    LPS22HH_GetAltFilt(&LPS22HH);
-//
-//
-//    ICM20602_GetInfo(&ICM20602, AxisGyroRaw);
-//    BNO080_ReadInfo(&BNO080);
-//
-//    M8N_ReceivePacket(&M8N);
-//    if(M8N.RxBuf.m8n_cplt_flag== 1)
-//    {
-//      M8N.RxBuf.m8n_cplt_flag = 0;
-//
-//      if(M8N_Checksum_Check(&M8N.RxBuf.buf[0], 36) == 1)
-//      {
-//        ledToggle(DEF_LED_1);
-//        M8N_Parsing(&M8N.RxBuf.buf[0], &M8N.posllh);
-//
-//        //  printf("LAT: %d\tLON: %d\t Height: %d\n", M8N.posllh.lat, M8N.posllh.lon, M8N.posllh.height);
-//      }
-//    }
-//
-//    FSIA6B_RecivePacket(&IA6B);
-//    if(IA6B.ibus_rx_cplt_flag == 1)
-//    {
-//      IA6B.ibus_rx_cplt_flag = 0;
-//      if(FSIA6B_Check_checkSum(&IA6B, 32) == 1)
-//      {
-//        FSIA6B_Parsing(&IA6B);
-//        if(FSIA6B_isFailsafe(&IA6B) == 1)
-//        {
-//
-//        }
-//        else
-//        {
-//
-//        }
-//      }
-//    }
-//
-//    if(Is20msFlag(DEF_TIM7)==1)
-//    {
-//
-//      //ROHS_Read();
-//      EncodeMsg_AHRS(&ROHS, &BNO080, &LPS22HH, &IA6B);
-//      ROHS_Write(&ROHS,&ROHS.txBuf[0],20);
-//      clear20msFlag(DEF_TIM7);
-//    }
-//
-//
-//    BatVolt = adcVolt * 0.003619f;
-//  }
 }
