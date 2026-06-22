@@ -61,7 +61,7 @@ void apInit(void)
 
   /*------------------Module------------------*/
   sensorInit();
-  sensorCalibration(ICM20602_Cali);
+ // sensorCalibration(ICM20602_Cali);
 
   gcsTmInit();
 
@@ -131,9 +131,11 @@ void apInit(void)
     while(droneTm->switch_ch[DEF_SwC] == Switch_IDLE)
     {
       sensorCalibration(BNO080_Cali_Step1);
+      droneTmUpdate();
     }
     sensorCalibration(BNO080_Cali_Step2);
   }
+  sensorCalibration(ICM20602_Cali);
 
 
 }

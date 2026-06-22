@@ -10,7 +10,7 @@
 
 #define  ishwCan          (isledInit() && isbuzzerInit())
 
-bool FailSafe_SensorError(uint8_t sensor_ch)
+bool  Alarm_SensorError(uint8_t sensor_ch)
 {
   bool ret= false;
   if(ishwCan)
@@ -38,7 +38,7 @@ bool FailSafe_SensorError(uint8_t sensor_ch)
   return ret;
 }
 
-bool FailSafe_RCLost(void)
+bool Alarm_RCLost(void)
 {
   bool ret = false;
   if(ishwCan)
@@ -54,7 +54,7 @@ bool FailSafe_RCLost(void)
   return ret;
 }
 
-bool FailSafe_LowBattery(void)
+bool Alarm_LowBattery(void)
 {
   bool ret = false;
   if(ishwCan)
@@ -66,10 +66,21 @@ bool FailSafe_LowBattery(void)
   return ret;
 }
 
-bool FailSafe_Indicate(uint8_t flag)
+bool Alarm_FailSafe(uint8_t flag)
 {
   if(ishwCan)
   {
 
   }
+}
+
+bool Alarm_EscCalibration(void)
+{
+
+}
+
+
+bool Alarm_Fail_PidRead(void)
+{
+
 }

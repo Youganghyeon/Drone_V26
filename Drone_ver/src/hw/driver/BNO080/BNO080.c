@@ -667,7 +667,7 @@ bool BNO080_Calibration(BNO080_tbl* p_bno080, uint8_t isCaliOk)
     }
     BNO080_Init();
     BNO080_Open(p_bno080);
-    BNO080_enableRotationVector(p_bno080, 2500); //Send data update every 2.5ms (400Hz)
+    BNO080_enableGameRotationVector(p_bno080, 2500); //Send data update every 2.5ms (400Hz)
     caliStep_1=false;
     caliStep_2=ret;
   }
