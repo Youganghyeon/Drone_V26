@@ -68,6 +68,7 @@ bool ROHS_Parsing(ROHS_tbl* p_rohs, uint8_t cmd)
     case ROHS_Header_H:
       if(cmd == 0x47)
       {
+        p_rohs->rx_cpltFlag = 0;
         p_rohs->rxBuf[cnt] = cmd;
         cnt++;
         p_rohs->rx_status = ROHS_Header_H;

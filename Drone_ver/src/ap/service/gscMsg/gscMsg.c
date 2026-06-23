@@ -7,21 +7,33 @@
 
 
 
-#include <gcstm.h>
+#include "gcstm.h"
 #include "sensor.h"
 #include "dronetm.h"
 #include "AT24C08.h"
 #include "gscMsg.h"
-static gscTm_tbl       Service_msg;
+
+static void Encode_Msg_PID_TxRx(void);
+
+static gscTm_tbl*      gcs_data;
 static DroneTm_tbl*    droneTm_data;
 static Sensor_tbl*     Sensor_data;
 static bool isinit   = false;
+static uint8_t txBuf[20];
+
 
 bool ServiceMsg_Init(void)
 {
   bool ret = false;
   bool s_ret = false;
   bool d_ret = false;
+  bool g_ret = false;
+  if(IsgscTmInit()==true)
+  {
+    gcs_data = gcsTmGetData();
+    g_ret = true;
+    gcsTmRegister_RxFunc(gcsTmRxcplt_Func1, Encode_Msg_PID_TxRx);
+  }
   if(isSensorInit()==true)
   {
     Sensor_data = sensorGetData();
@@ -33,7 +45,7 @@ bool ServiceMsg_Init(void)
     d_ret = true;
    }
 
-  if(s_ret && d_ret)
+  if(s_ret && d_ret&& g_ret)
   {
     isinit = true;
     ret =true;
@@ -41,7 +53,36 @@ bool ServiceMsg_Init(void)
   return ret;
 }
 
-static uint8_t txBuf[20];
+static void Encode_Msg_PID_TxRx(void)
+{
+  if(droneTm_data->switch_ch[DEF_SwA] == Switch_low)
+  {
+    float kp;
+    float ki;
+    float kd;
+    uint8_t *p_data = gcs_data->gscTm_rx;
+    switch(p_data[2])
+    {
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+        kp = *(float*)&p_data[3];
+        ki = *(float*)&p_data[7];
+        kd = *(float*)&p_data[11];
+        EP_PIDGain_Write(p_data[2], kp, ki, kd);
+        EP_PIDGain_Read(p_data[2], &kp, &ki, &kd);
+        MsgEncode_PID_Gain(p_data[2], kp, ki, kd);
+        gcsTmWrite(&txBuf[0], 20);
+        break;
+
+    }
+  }
+}
+
+
 
 void EncodeMsg_AHRS(void)
 {
@@ -85,7 +126,6 @@ void EncodeMsg_AHRS(void)
 
 void MsgEncode_GPS(void)
 {
-  uint8_t txBuf[20];
   txBuf[0] = 0x46;
   txBuf[1] = 0x43;
 

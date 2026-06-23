@@ -61,7 +61,7 @@ void apInit(void)
 
   /*------------------Module------------------*/
   sensorInit();
- // sensorCalibration(ICM20602_Cali);
+  // sensorCalibration(ICM20602_Cali);
 
   gcsTmInit();
 
@@ -123,7 +123,6 @@ void apInit(void)
     escCalibration();
     while(droneTm->switch_ch[DEF_SwC] == Switch_low)
     {
-
     }
   }
   else if(droneTm->switch_ch[DEF_SwC] == Switch_IDLE)
@@ -136,8 +135,6 @@ void apInit(void)
     sensorCalibration(BNO080_Cali_Step2);
   }
   sensorCalibration(ICM20602_Cali);
-
-
 }
 
 static float    BatVolt=0.0;
@@ -151,7 +148,7 @@ void apMain(void)
   {
     sensorUpdate();
     droneTmUpdate();
-
+    gcsTmUpdate(gcsTmRxcplt_Func1);
     if(millis()-premillis>=500)
     {
       ledToggle(DEF_LED_2);

@@ -12,5 +12,5 @@
 #include "esc.h"
 #include "gcstm.h"
 #include "sensor.h"
-
+#include "rohs.h"
 #endif /* HW_MODULE_MODULE_H_ */
