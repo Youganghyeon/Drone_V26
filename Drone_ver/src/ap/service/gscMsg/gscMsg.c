@@ -4,15 +4,8 @@
  *  Created on: 2026. 6. 9.
  *      Author: yougang
  */
-
-
-
-#include "gcstm.h"
-#include "sensor.h"
-#include "dronetm.h"
 #include "AT24C08.h"
 #include "gscMsg.h"
-
 static void Encode_Msg_PID_TxRx(void);
 
 static gscTm_tbl*      gcs_data;

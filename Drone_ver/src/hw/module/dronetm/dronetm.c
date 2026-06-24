@@ -10,7 +10,7 @@
 #include "FS-iA6B.h"
 
 
-#define Switch_Convert(x)   ((x) < 1300 ? Switch_low : ((x) < 1700 ? Switch_IDLE : Switch_high))
+#define Switch_Convert(x)   ((x) < 1300 ? Switch_high : ((x) < 1700 ? Switch_IDLE : Switch_low))
 static FSiA6B_tbl     IA6B;
 static DroneTm_tbl Drone_Tm;
 static bool isInit = false;

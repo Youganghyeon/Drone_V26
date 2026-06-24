@@ -9,6 +9,7 @@
 #include "ap.h"
 #include "module.h"
 #include "service/gscMsg/gscMsg.h"
+#include "service/flight//flight.h"
 #include "pid.h"
 
 __attribute__((weak)) int _write(int file, char *ptr, int len)
@@ -18,13 +19,14 @@ __attribute__((weak)) int _write(int file, char *ptr, int len)
   return len;
 }
 
-Double_PID_tbl roll;
-Double_PID_tbl pitch;
-Single_PID_tbl yaw_heading;
-Single_PID_tbl yaw_rate;
+static Double_PID_tbl roll;
+static Double_PID_tbl pitch;
+static Single_PID_tbl yaw_heading;
+static Single_PID_tbl yaw_rate;
 
 static DroneTm_tbl* droneTm;
-static Sensor_tbl* sensor_data;
+static Sensor_tbl*  sensor_data;
+
 void apInit(void)
 {
   /*------------------UART------------------*/
@@ -148,7 +150,9 @@ void apMain(void)
   {
     sensorUpdate();
     droneTmUpdate();
-    gcsTmUpdate(gcsTmRxcplt_Func1);
+    gcsTmUpdate(gcsTmRxcplt_Func1); // Use Callback.
+    Drone_Arming_Update(&roll, &pitch, &yaw_heading, &yaw_rate);
+
     if(millis()-premillis>=500)
     {
       ledToggle(DEF_LED_2);
@@ -156,17 +160,9 @@ void apMain(void)
       premillis=millis();
     }
 
-    if(droneTm->is_Received == true && (!droneTm->failsafe_status))
-    {
-      uint32_t output = (uint32_t)(10500  + (droneTm->setthrottle - 1000) * 10.5);
-      escOutput(DEF_ESC1, output);
-      escOutput(DEF_ESC2, output);
-      escOutput(DEF_ESC3, output);
-      escOutput(DEF_ESC4, output);
-    }
-
     if(Is1msFlag(DEF_TIM7))
     {
+      Drone_FSM_1ms_Update(&roll, &pitch, &yaw_heading, &yaw_rate);
       clear1msFlag(DEF_TIM7);
     }
 
@@ -179,3 +175,5 @@ void apMain(void)
     //    BatVolt = adcVolt * 0.003619f;
   }
 }
+
+
