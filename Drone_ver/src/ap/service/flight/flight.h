@@ -26,7 +26,7 @@ typedef enum {
 
 
 #define MOTOR_STOP          DEF_ESC_STOP
-#define MOTOR_IDLE_MIN      DEF_ESC_STOP+1000
+#define MOTOR_IDLE_MIN      DEF_ESC_STOP+500
 #define MOTOR_MAX           DEF_ESC_MAX
 
 #define YAW_DEADZONE_LOW    SET_YAW_CENTER - 15

@@ -28,7 +28,7 @@
  * https://github.com/ChrisWonyeobPark
  * https://blog.naver.com/lbiith
  * https://cafe.naver.com/mhiveacademy
-*/
+ */
 
 #include "pid.h"
 
@@ -80,16 +80,16 @@ void Double_PID_Calc(Double_PID_tbl* axis, float set_point_angle, float angle/*B
   /****************************************************************************************/
 
   /************ Double PID Inner Begin (Roll and Pitch Angular Rate Control) **************/
-  p_inner->reference = p_inner->pid_result;  //Set point of inner PID control is the PID result of outer loop (for double PID control)
+  p_inner->reference = p_outer->pid_result;  //Set point of inner PID control is the PID result of outer loop (for double PID control)
   p_inner->meas_value = rate;         //ICM-20602 angular rate
 
   p_inner->error = p_inner->reference - p_inner->meas_value;  //Define error of inner loop
   p_inner->p_result = p_inner->error * p_inner->kp;     //Calculate P result of inner loop
 
-  p_inner->error_sum = p_inner->error_sum + p_inner->error * DT;  //Define summation of inner loop
+  p_inner->error_sum = p_inner->error_sum + p_inner->error * DT;
 
-  if(p_outer->error_sum > IN_ERR_SUM_MAX) p_outer->error_sum = IN_ERR_SUM_MAX;
-  else if(p_outer->error_sum < IN_I_ERR_MIN) p_outer->error_sum = IN_I_ERR_MIN;
+  if(p_inner->error_sum > IN_ERR_SUM_MAX) p_inner->error_sum = IN_ERR_SUM_MAX;
+  else if(p_inner->error_sum < IN_I_ERR_MIN) p_inner->error_sum = IN_I_ERR_MIN;
   p_inner->i_result = p_inner->error_sum * p_inner->ki;             //Calculate I result of inner loop
 
   p_inner->error_deriv = -(p_inner->meas_value - p_inner->meas_value_prev) / DT;  //Define derivative of inner loop
@@ -154,10 +154,10 @@ void Reset_PID_Integrator(Single_PID_tbl* axis)
   axis->error_sum = 0;
 }
 
-void Reset_All_PID_Integrator(Double_PID_tbl* p_roll, Double_PID_tbl* p_pitch,Single_PID_tbl* p_yaw_heading, Single_PID_tbl* p_yaw_rate)
+void Reset_All_PID_Integrator(Double_PID_tbl* p_roll, Double_PID_tbl* p_pitch, Single_PID_tbl* p_yaw_heading, Single_PID_tbl* p_yaw_rate)
 {
   Reset_PID_Integrator(&p_roll->inner);
-  Reset_PID_Integrator(&p_pitch->outer);
+  Reset_PID_Integrator(&p_roll->outer);
   Reset_PID_Integrator(&p_pitch->inner);
   Reset_PID_Integrator(&p_pitch->outer);
   Reset_PID_Integrator(p_yaw_heading);

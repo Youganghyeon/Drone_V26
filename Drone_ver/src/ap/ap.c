@@ -80,8 +80,7 @@ void apInit(void)
 
   /*------------------Service------------------*/
   ServiceMsg_Init();
-
-  /*------------------Calibration------------------*/
+ /*------------------Calibration------------------*/
 
   /* 1. Read PID -> GCS
    * 2. Ready until droneTm is connect
@@ -125,6 +124,7 @@ void apInit(void)
     escCalibration();
     while(droneTm->switch_ch[DEF_SwC] == Switch_low)
     {
+      droneTmUpdate();
     }
   }
   else if(droneTm->switch_ch[DEF_SwC] == Switch_IDLE)
@@ -137,7 +137,9 @@ void apInit(void)
     sensorCalibration(BNO080_Cali_Step2);
   }
   sensorCalibration(ICM20602_Cali);
+  Drone_Service_Init();
 }
+
 
 static float    BatVolt=0.0;
 static uint16_t adcVolt=0;
