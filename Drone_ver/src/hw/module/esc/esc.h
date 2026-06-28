@@ -9,6 +9,8 @@
 #define SRC_HW_ESC_ESC_H_
 
 #include "hw_def.h"
+#include "module_def.h"
+
 #ifdef _USE_HW_ESC
 
 

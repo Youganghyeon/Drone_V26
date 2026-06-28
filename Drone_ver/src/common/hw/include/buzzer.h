@@ -12,7 +12,8 @@
 
 #ifdef _USE_HW_BUZZER
 
-#define  DEF_BUZZER1  DEF_TIM3_CH4
+#define  DEF_BUZZER_MAX_CH  1
+#define  DEF_BUZZER1        DEF_TIM3_CH4
 
 bool    buzInit(void);
 bool    isBuzInit(void);

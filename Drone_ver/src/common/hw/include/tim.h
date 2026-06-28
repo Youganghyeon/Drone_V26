@@ -58,8 +58,13 @@ bool pwmStop(uint8_t ch);
 bool timDeinit(uint8_t ch);
 bool Is1msFlag(uint8_t ch);
 bool Is20msFlag(uint8_t ch);
+bool Is100msFlag(uint8_t ch);
+bool Is1000msFlag(uint8_t ch);
 bool clear1msFlag(uint8_t ch);
 bool clear20msFlag(uint8_t ch);
+bool clear100msFlag(uint8_t ch);
+bool clear1000msFlag(uint8_t ch);
+
 #endif
 
 

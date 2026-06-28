@@ -23,7 +23,8 @@ typedef enum{
 #define DEF_SERVICE_MSG1      0
 
 bool ServiceMsg_Init(void);
-void EncodeMsg_AHRS(void);
+void EncodeMsg_AHRS(uint8_t* tx_buf);
+void MsgEncode_GPS(uint8_t* tx_buf);
 void MsgEncode_PID_Gain(uint8_t id, float p, float i, float d);
 
 //void MsgEncode_GPS(void);

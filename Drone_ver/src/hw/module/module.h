@@ -13,14 +13,8 @@
 #include "gcstm.h"
 #include "sensor.h"
 #include "rohs.h"
-
-#define DEF_SET_THROTTLE_MIN     1000
-
-#define DEF_ESC_STOP             10500
-#define DEF_ESC_MAX              21000
-
-
-#define SET_YAW_CENTER           1500
-
+#include "battery.h"
+#include "module_def.h"
+#include "hw_def.h"
 
 #endif /* HW_MODULE_MODULE_H_ */

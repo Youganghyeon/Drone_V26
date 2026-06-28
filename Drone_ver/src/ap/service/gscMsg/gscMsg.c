@@ -6,6 +6,8 @@
  */
 #include "AT24C08.h"
 #include "gscMsg.h"
+#include "battery.h"
+
 static void Encode_Msg_PID_TxRx(void);
 
 static gscTm_tbl*      gcs_data;
@@ -77,7 +79,7 @@ static void Encode_Msg_PID_TxRx(void)
 
 
 
-void EncodeMsg_AHRS(void)
+void EncodeMsg_AHRS(uint8_t* tx_buf)
 {
 
   txBuf[0] = 0x46;
@@ -114,10 +116,9 @@ void EncodeMsg_AHRS(void)
   {
     txBuf[19] = txBuf[19] - txBuf[i];
   }
-  gcsTmWrite(&txBuf[0], 20);
 }
 
-void MsgEncode_GPS(void)
+void MsgEncode_GPS(uint8_t* tx_buf)
 {
   txBuf[0] = 0x46;
   txBuf[1] = 0x43;
@@ -134,8 +135,8 @@ void MsgEncode_GPS(void)
   txBuf[9]  = Sensor_data->lon>>16;
   txBuf[10] = Sensor_data->lon>>24;
 
-  txBuf[11] = 0;//(unsigned short)(batVolt*100);
-  txBuf[12] = 0;//((unsigned short)(batVolt*100))>>8;
+  txBuf[11] = (unsigned short)(batCheck()*100);
+  txBuf[12] = ((unsigned short)(batCheck()*100))>>8;
 
   txBuf[13] = droneTm_data->switch_ch[DEF_SwA] == 1000 ? 0 : 1;
   txBuf[14] = droneTm_data->switch_ch[DEF_SwC] == 1000 ? 0 : droneTm_data->switch_ch[DEF_SwC] == 1500 ? 1 : 2;
@@ -152,7 +153,6 @@ void MsgEncode_GPS(void)
   {
     txBuf[19] =txBuf[19] - txBuf[i];
   }
-  gcsTmWrite(&txBuf[0], 20);
 }
 
 void MsgEncode_PID_Gain(uint8_t id, float p, float i, float d)

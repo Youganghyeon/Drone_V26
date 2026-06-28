@@ -10,6 +10,7 @@
 #include "module.h"
 #include "service/gscMsg/gscMsg.h"
 #include "service/flight//flight.h"
+#include "service/failSafe/failSafe.h"
 #include "pid.h"
 
 __attribute__((weak)) int _write(int file, char *ptr, int len)
@@ -38,11 +39,13 @@ void apInit(void)
 
   /*------------------TIM------------------*/
   timOpen (DEF_TIM7);
+
   timOpen (DEF_TIM5_CH1);
   timOpen (DEF_TIM5_CH2);
   timOpen (DEF_TIM5_CH3);
   timOpen (DEF_TIM5_CH4);
 
+  timOpen (DEF_TIM3_CH4);
   /*------------------ADC------------------*/
   adcOpen (DEF_ADC1);
 
@@ -55,15 +58,15 @@ void apInit(void)
   /*------------------I2C------------------*/
   i2cOpen(HW_DEF_I2C1);
 
-  //  buzSetPitch(2000);
-  //  delay(1000);
-  //  buzSetPitch(1000);
-  //  delay(1000);
-  //buzDeinit();
-
   /*------------------Module------------------*/
+  buzInit   ();
+  buzSetPitch(DEF_BUZZER1, 2000);
+  delay(1000);
+  buzSetPitch(DEF_BUZZER1, 1000);
+  delay(1000);
+  buzDeinit();
+
   sensorInit();
-  // sensorCalibration(ICM20602_Cali);
 
   gcsTmInit();
 
@@ -77,10 +80,9 @@ void apInit(void)
   escOpen(DEF_ESC4);
 
   AT24C08_Open();
-
   /*------------------Service------------------*/
   ServiceMsg_Init();
- /*------------------Calibration------------------*/
+  /*------------------Calibration------------------*/
 
   /* 1. Read PID -> GCS
    * 2. Ready until droneTm is connect
@@ -122,7 +124,7 @@ void apInit(void)
   if(droneTm->switch_ch[DEF_SwC] == Switch_high)
   {
     escCalibration();
-    while(droneTm->switch_ch[DEF_SwC] == Switch_low)
+    while(droneTm->switch_ch[DEF_SwC] != Switch_low)
     {
       droneTmUpdate();
     }
@@ -140,14 +142,10 @@ void apInit(void)
   Drone_Service_Init();
 }
 
-
-static float    BatVolt=0.0;
-static uint16_t adcVolt=0;
-
 void apMain(void)
 {
+  batStart();
   uint32_t premillis=0;
-  adcReceive_DMA(DEF_ADC1, (uint32_t*)&adcVolt, 1);
   while(1)
   {
     sensorUpdate();
@@ -170,11 +168,32 @@ void apMain(void)
 
     if(Is20msFlag(DEF_TIM7))
     {
-      EncodeMsg_AHRS();
+      static uint8_t AHRS_txBuf[20];
+      EncodeMsg_AHRS(&AHRS_txBuf[0]);
+      gcsTmWrite(&AHRS_txBuf[0], 20);
       clear20msFlag(DEF_TIM7);
     }
+
+    if(Is100msFlag(DEF_TIM7))
+    {
+      static uint8_t AHRS_GPS_txBuf[40];
+      EncodeMsg_AHRS(&AHRS_GPS_txBuf[0]);
+      MsgEncode_GPS(&AHRS_GPS_txBuf[20]);
+      gcsTmWrite(&AHRS_GPS_txBuf[0], 40);
+      clear100msFlag(DEF_TIM7);
+    }
+
+    if(Is1000msFlag(DEF_TIM7))
+    {
+      if(droneTm->rx_cnt == 0)
+      {
+        Alarm_FailSafe(RC_Lost);
+      }
+      droneTm->rx_cnt = 0;
+      clear1000msFlag(DEF_TIM7);
+    }
+
     //cliMain();
-    //    BatVolt = adcVolt * 0.003619f;
   }
 }
 

@@ -9,6 +9,8 @@
 #define SRC_HW_SENSOR_SENSOR_H_
 
 #include "hw_def.h"
+#include "module_def.h"
+
 
 typedef struct{
   float roll;
@@ -33,9 +35,9 @@ typedef enum{
 }Calibration_Sensor_Type;
 
 #define        SENOSR_MAX_CH      HW_SENSOR_MAX_CH
-#define        DEF_SENSOR1       _DEF_HW_ICM20602
-#define        DEF_SENSOR2       _DEF_HW_BNO080
-#define        DEF_SENSOR3       _DEF_HW_LPS22HH
+#define        DEF_SENSOR1        DEF_HW_ICM20602
+#define        DEF_SENSOR2        DEF_HW_BNO080
+#define        DEF_SENSOR3        DEF_HW_LPS22HH
 
 
 bool           sensorInit(void);

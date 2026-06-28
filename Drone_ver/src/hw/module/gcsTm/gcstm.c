@@ -6,6 +6,7 @@
  */
 
 #include "gcstm.h"
+#include "rohs.h"
 
 static ROHS_tbl  ROHS;
 static gscTm_tbl Gcs_Data;

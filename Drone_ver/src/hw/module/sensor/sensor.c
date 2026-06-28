@@ -13,6 +13,8 @@ static M8N_tbl        M8N;
 static Sensor_tbl sensor_data;
 static bool is_init = false;
 
+#define APPLY_SIGN(val)   ((val) * (-1.0f))
+
 bool sensorInit(void)
 {
   bool ret = true;
@@ -71,15 +73,15 @@ void sensorUpdate(void)
   }
   if(ICM20602_GetInfo(&ICM20602, AxisGyroRaw)==true)
   {
-    sensor_data.gyro_x      = ICM20602.gyro_x;
+    sensor_data.gyro_x      = APPLY_SIGN(ICM20602.gyro_x);
     sensor_data.gyro_y      = ICM20602.gyro_y;
-    sensor_data.gyro_z      = ICM20602.gyro_z;
+    sensor_data.gyro_z      = APPLY_SIGN(ICM20602.gyro_z);
 
   }
   if(BNO080_ReadInfo(&BNO080)==true)
   {
-    sensor_data.roll        = BNO080.BNO080_Angle.Roll;
-    sensor_data.pitch       = BNO080.BNO080_Angle.Pitch;
+    sensor_data.roll        = APPLY_SIGN(BNO080.BNO080_Angle.Roll);
+    sensor_data.pitch       = APPLY_SIGN(BNO080.BNO080_Angle.Pitch);
     sensor_data.yaw         = BNO080.BNO080_Angle.Yaw;
   }
 

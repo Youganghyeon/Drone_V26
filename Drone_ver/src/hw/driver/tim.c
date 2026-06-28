@@ -29,9 +29,13 @@ typedef struct {
 } TIM_Base_tbl;
 
 typedef struct {
- volatile bool     Flag_1ms;
- volatile bool     Flag_20ms;
- volatile uint32_t counter_20ms;
+  volatile bool     Flag_1ms;
+  volatile bool     Flag_20ms;
+  volatile bool     Flag_100ms;
+  volatile bool     Flag_1000ms;
+  volatile uint32_t counter_20ms;
+  volatile uint32_t counter_100ms;
+  volatile uint32_t counter_1000ms;
 } TIMER_Flag_tbl;
 
 typedef struct {
@@ -341,6 +345,29 @@ bool Is20msFlag(uint8_t ch)
   return timer_tbl[idx].timerFlag.Flag_20ms;
 }
 
+
+bool Is100msFlag(uint8_t ch)
+{
+  if (!TIM_IS_TIMER(ch)) return false;
+
+  uint8_t idx = TIM_GET_INDEX(ch);
+  if (idx >= TIMER_MAX_CH) return false;
+
+  return timer_tbl[idx].timerFlag.Flag_100ms;
+}
+
+
+bool Is1000msFlag(uint8_t ch)
+{
+  if (!TIM_IS_TIMER(ch)) return false;
+
+  uint8_t idx = TIM_GET_INDEX(ch);
+  if (idx >= TIMER_MAX_CH) return false;
+
+  return timer_tbl[idx].timerFlag.Flag_1000ms;
+}
+
+
 bool clear1msFlag(uint8_t ch)
 {
   if (!TIM_IS_TIMER(ch)) return false;
@@ -363,17 +390,52 @@ bool clear20msFlag(uint8_t ch)
   return true;
 }
 
+bool clear100msFlag(uint8_t ch)
+{
+  if (!TIM_IS_TIMER(ch)) return false;
+
+  uint8_t idx = TIM_GET_INDEX(ch);
+  if (idx >= TIMER_MAX_CH) return false;
+
+  timer_tbl[idx].timerFlag.Flag_100ms = false;
+  return true;
+}
+
+bool clear1000msFlag(uint8_t ch)
+{
+  if (!TIM_IS_TIMER(ch)) return false;
+
+  uint8_t idx = TIM_GET_INDEX(ch);
+  if (idx >= TIMER_MAX_CH) return false;
+
+  timer_tbl[idx].timerFlag.Flag_1000ms = false;
+  return true;
+}
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* Prevent unused argument(s) compilation warning */
   if(htim->Instance == timer_tbl[HW_DEF_TIM7].tim. htim->Instance)
   {
     timer_tbl[HW_DEF_TIM7].timerFlag.Flag_1ms = true;
+
     timer_tbl[HW_DEF_TIM7].timerFlag.counter_20ms = (timer_tbl[HW_DEF_TIM7].timerFlag.counter_20ms+1)%21;
     if(timer_tbl[HW_DEF_TIM7].timerFlag.counter_20ms == 20)
     {
       timer_tbl[HW_DEF_TIM7].timerFlag.Flag_20ms = true;
     }
+
+    timer_tbl[HW_DEF_TIM7].timerFlag.counter_100ms = (timer_tbl[HW_DEF_TIM7].timerFlag.counter_100ms+1)%101;
+    if(timer_tbl[HW_DEF_TIM7].timerFlag.counter_100ms == 100)
+    {
+      timer_tbl[HW_DEF_TIM7].timerFlag.Flag_100ms = true;
+    }
+
+    timer_tbl[HW_DEF_TIM7].timerFlag.counter_1000ms = (timer_tbl[HW_DEF_TIM7].timerFlag.counter_1000ms+1)%1001;
+    if(timer_tbl[HW_DEF_TIM7].timerFlag.counter_1000ms == 1000)
+    {
+      timer_tbl[HW_DEF_TIM7].timerFlag.Flag_1000ms = true;
+    }
+
   }
 
   /* NOTE : This function should not be modified, when the callback is needed,

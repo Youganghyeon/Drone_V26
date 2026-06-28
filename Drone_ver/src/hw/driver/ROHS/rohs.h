@@ -10,6 +10,7 @@
 
 
 #include "hw_def.h"
+#include "module_def.h"
 
 #ifdef _USE_HW_ROHS
 typedef enum{

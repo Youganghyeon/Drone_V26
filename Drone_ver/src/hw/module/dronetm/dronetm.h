@@ -9,6 +9,7 @@
 #define HW_MODULE_DRONETM_DRONETM_H_
 
 #include "hw_def.h"
+#include "module_def.h"
 
 #define DEF_SW_MAX    HW_DEF_FSIA6B_SW_MAX_CH
 #define DEF_SwA       HW_DEF_FSIA6B_SW_A
@@ -36,10 +37,11 @@ typedef struct
   uint8_t  failsafe_status;    // 페일세이프 상태
   bool     is_connected;       // 연결 여부 (isOpen 변경)
   bool     is_Received;
+  uint16_t rx_cnt;
 }DroneTm_tbl;
 
 
-void droneTmUpdate(void);
+bool droneTmUpdate(void);
 bool droneTmInit(void);
 DroneTm_tbl* droneLinkData(void);
 bool IsdroneTmInit(void);

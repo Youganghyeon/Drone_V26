@@ -31,7 +31,7 @@ bool IsdroneTmInit(void)
   return isInit;
 }
 
-void droneTmUpdate(void)
+bool droneTmUpdate(void)
 {
   FSIA6B_RecivePacket(&IA6B);
   if(IA6B.ibus_rx_cplt_flag == 1)
@@ -53,8 +53,14 @@ void droneTmUpdate(void)
       Drone_Tm.failsafe_status = FSIA6B_isFailsafe(&IA6B);
       Drone_Tm.is_connected = IA6B.isOpen;
       Drone_Tm.is_Received =  true;
+      Drone_Tm.rx_cnt = (Drone_Tm.rx_cnt + 1);
     }
   }
+  else
+  {
+    Drone_Tm.is_Received =  false;
+  }
+  return Drone_Tm.is_Received;
 }
 
 

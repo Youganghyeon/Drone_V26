@@ -8,11 +8,10 @@
 #ifndef SRC_HW_GCS_H_
 #define SRC_HW_GCS_H_
 
-#include "module.h"
+#include "module_def.h"
 #include "hw_def.h"
 
 #define   Max_Rxcplt_num      1
-
 #define   gcsTmRxcplt_Func1   0
 #define   None                Max_Rxcplt_num
 
