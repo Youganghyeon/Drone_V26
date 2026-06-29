@@ -79,7 +79,7 @@ static void Encode_Msg_PID_TxRx(void)
 
 
 
-void EncodeMsg_AHRS(uint8_t* tx_buf)
+void EncodeMsg_AHRS(uint8_t* txBuf)
 {
 
   txBuf[0] = 0x46;
@@ -118,7 +118,7 @@ void EncodeMsg_AHRS(uint8_t* tx_buf)
   }
 }
 
-void MsgEncode_GPS(uint8_t* tx_buf)
+void MsgEncode_GPS(uint8_t* txBuf)
 {
   txBuf[0] = 0x46;
   txBuf[1] = 0x43;

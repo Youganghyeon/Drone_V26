@@ -7,9 +7,7 @@
 
 #include "battery.h"
 #include "adc.h"
-bool isInit;
-
-
+static bool isInit;
 static float    BatVolt=0.0f;
 static uint16_t adcVolt=0;
 

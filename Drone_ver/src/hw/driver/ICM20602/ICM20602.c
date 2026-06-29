@@ -129,7 +129,7 @@ bool ICM20602_Open(ICM20602_tbl_t* p_sensor)
   return ret;
 }
 
-bool ICM20602_Calibration(short gyro_x_offset, short gyro_y_offset, short gyro_z_offset)
+void ICM20602_Calibration(short gyro_x_offset, short gyro_y_offset, short gyro_z_offset)
 {
   ICM20602_Writebyte(0x13, (gyro_x_offset*-2)>>8);
   ICM20602_Writebyte(0x14, (gyro_x_offset*-2));

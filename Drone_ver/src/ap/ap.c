@@ -166,7 +166,7 @@ void apMain(void)
       clear1msFlag(DEF_TIM7);
     }
 
-    if(Is20msFlag(DEF_TIM7))
+    if((Is20msFlag(DEF_TIM7)) && (!Is100msFlag(DEF_TIM7)))
     {
       static uint8_t AHRS_txBuf[20];
       EncodeMsg_AHRS(&AHRS_txBuf[0]);
@@ -174,13 +174,14 @@ void apMain(void)
       clear20msFlag(DEF_TIM7);
     }
 
-    if(Is100msFlag(DEF_TIM7))
+    if(Is100msFlag(DEF_TIM7) && (Is20msFlag(DEF_TIM7)))
     {
       static uint8_t AHRS_GPS_txBuf[40];
       EncodeMsg_AHRS(&AHRS_GPS_txBuf[0]);
       MsgEncode_GPS(&AHRS_GPS_txBuf[20]);
       gcsTmWrite(&AHRS_GPS_txBuf[0], 40);
       clear100msFlag(DEF_TIM7);
+      clear20msFlag(DEF_TIM7);
     }
 
     if(Is1000msFlag(DEF_TIM7))
