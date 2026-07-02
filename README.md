@@ -4,7 +4,8 @@
 
 ## 3 Flying
 
-// Not yet
-## 4 STEP RTOS
+## 4 STEP Altitude control 
 
-## 5 STEP HEXA
+## 5 STEP RTOS
+
+## 6 STEP HEXA
