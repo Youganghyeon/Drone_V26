@@ -50,7 +50,7 @@ bool ServiceMsg_Init(void)
 
 static void Encode_Msg_PID_TxRx(void)
 {
-  if(droneTm_data->switch_ch[DEF_SwA] == Switch_low)
+  if(droneTm_data->switch_ch[DEF_SwA] == Switch_high)
   {
     float kp;
     float ki;

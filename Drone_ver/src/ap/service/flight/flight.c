@@ -120,6 +120,7 @@ void Drone_FSM_1ms_Update( Double_PID_tbl* pid_roll,Double_PID_tbl* pid_pitch,
       break;
     case STATE_ARMED_IDLE:
       Reset_All_PID_Integrator(pid_roll,pid_pitch,pid_yawHeading,pid_yawRate);
+      yaw_heading_reference = p_sensor->yaw;
       escOutput(DEF_ESC1, MOTOR_IDLE_MIN);
       escOutput(DEF_ESC2, MOTOR_IDLE_MIN);
       escOutput(DEF_ESC3, MOTOR_IDLE_MIN);
