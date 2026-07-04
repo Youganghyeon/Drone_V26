@@ -1,8 +1,8 @@
 ## 1 STEP Software Structure
 
-## 2 STEP SPI DMA
+## 2 STEP DMA
 
-## 3 Flying
+## 3 STEP Flying
 
 ## 4 STEP Altitude control 
 
