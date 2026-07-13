@@ -9,10 +9,10 @@
 #include "ap.h"
 #include "module.h"
 #include "service/gscMsg/gscMsg.h"
-#include "service/flight//flight.h"
+#include "interface/flight_if.h"
 #include "service/failSafe/failSafe.h"
 #include "pid.h"
-
+#include "service_def.h"
 __attribute__((weak)) int _write(int file, char *ptr, int len)
 {
   (void)file;
@@ -24,7 +24,7 @@ static Double_PID_tbl roll;
 static Double_PID_tbl pitch;
 static Single_PID_tbl yaw_heading;
 static Single_PID_tbl yaw_rate;
-
+static Double_PID_tbl alt;
 static DroneTm_tbl* droneTm;
 static Sensor_tbl*  sensor_data;
 
@@ -139,7 +139,18 @@ void apInit(void)
     sensorCalibration(BNO080_Cali_Step2);
   }
   sensorCalibration(ICM20602_Cali);
-  Drone_Service_Init();
+  //Drone_Service_Init();
+  Drone_Service_Init(&roll, &pitch,
+                     &yaw_heading, &yaw_rate,
+                     &alt);
+  /*-------------------------drone SetMode ------------------------------*/
+  uint8_t mode;
+  while(droneTm->setRoll != 2000)
+  {
+    mode = droneToggleCount(DEF_SwC, Switch_low) % MODE_MAX_NUM;
+    droneTmUpdate();
+  }
+  Drone_Mode_Select(mode);
 }
 
 void apMain(void)
@@ -151,8 +162,8 @@ void apMain(void)
     sensorUpdate();
     droneTmUpdate();
     gcsTmUpdate(gcsTmRxcplt_Func1); // Use Callback.
-    Drone_Arming_Update(&roll, &pitch, &yaw_heading, &yaw_rate);
-
+    //Drone_Arming_Update(&roll, &pitch, &yaw_heading, &yaw_rate);
+    Drone_Arming_Update();
     if(millis()-premillis>=500)
     {
       ledToggle(DEF_LED_2);
@@ -162,7 +173,8 @@ void apMain(void)
 
     if(Is1msFlag(DEF_TIM7))
     {
-      Drone_FSM_1ms_Update(&roll, &pitch, &yaw_heading, &yaw_rate);
+      //Drone_FSM_1ms_Update(&roll, &pitch, &yaw_heading, &yaw_rate);
+      Drone_FSM_1ms_Update();
       clear1msFlag(DEF_TIM7);
     }
 

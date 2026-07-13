@@ -1,0 +1,13 @@
+D:\C#\GCS\GCS\bin\Debug\GCS.exe.config
+D:\C#\GCS\GCS\bin\Debug\GCS.exe
+D:\C#\GCS\GCS\bin\Debug\GCS.pdb
+D:\C#\GCS\GCS\obj\Debug\GCS.csproj.AssemblyReference.cache
+D:\C#\GCS\GCS\obj\Debug\GCS.Form1.resources
+D:\C#\GCS\GCS\obj\Debug\GCS.Properties.Resources.resources
+D:\C#\GCS\GCS\obj\Debug\GCS.csproj.GenerateResource.cache
+D:\C#\GCS\GCS\obj\Debug\GCS.csproj.CoreCompileInputs.cache
+D:\C#\GCS\GCS\obj\Debug\GCS.exe
+D:\C#\GCS\GCS\obj\Debug\GCS.pdb
+D:\C#\GCS\GCS\bin\Debug\GMap.NET.Core.dll
+D:\C#\GCS\GCS\bin\Debug\GMap.NET.WindowsForms.dll
+D:\C#\GCS\GCS\obj\Debug\GCS.csproj.Up2Date

@@ -45,4 +45,6 @@ bool droneTmUpdate(void);
 bool droneTmInit(void);
 DroneTm_tbl* droneLinkData(void);
 bool IsdroneTmInit(void);
+uint16_t droneToggleCount(uint8_t ch, Switch_state state);
+
 #endif /* HW_MODULE_DRONETM_DRONETM_H_ */

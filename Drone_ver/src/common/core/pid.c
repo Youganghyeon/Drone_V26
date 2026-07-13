@@ -40,7 +40,7 @@
 #define OUT_I_ERR_MIN -OUT_ERR_SUM_MAX
 #define IN_ERR_SUM_MAX 500
 #define IN_I_ERR_MIN -IN_ERR_SUM_MAX
-
+#define DT_ALT  0.02f
 
 
 void Double_PID_Calc(Double_PID_tbl* axis, float set_point_angle, float angle/*BNO080 Rotation Angle*/, float rate/*ICM-20602 Angular Rate*/)
@@ -132,7 +132,7 @@ void Single_PID_Yaw_Heading_Calc(Single_PID_tbl* axis, float set_point_angle, fl
 void Single_PID_Yaw_Rate_Calc(Single_PID_tbl* axis, float set_point_rate, float rate/*ICM-20602 Angular Rate*/)
 {
   /*********** Single PID Begin (Yaw Angular Rate Control) *************/
-  axis->reference = set_point_rate; //Set point of yaw heading @ yaw stick is not center.
+  axis->reference = set_point_rate; //Set point of yaw heading @ yaw stick is not center.a
   axis->meas_value = rate;      //Current ICM20602.gyro_z @ yaw stick is not center.
 
   axis->error = axis->reference - axis->meas_value; //Define error of yaw rate control
@@ -149,12 +149,125 @@ void Single_PID_Yaw_Rate_Calc(Single_PID_tbl* axis, float set_point_rate, float 
   /*******************************************************************/
 }
 
+void Double_Altitude_PID_Calculation(Double_PID_tbl* axis,
+                                     float set_point_alt,
+                                     float alt_meas,
+                                     float climb_rate)
+{
+  Single_PID_tbl* p_inner = &axis->inner;
+  Single_PID_tbl* p_outer = &axis->outer;
+
+  /*********** Double PID Outer (Altitude Position -> Target Climb Rate) *************/
+  p_outer->reference  = set_point_alt;
+  p_outer->meas_value = alt_meas;
+
+  p_outer->error = p_outer->reference - p_outer->meas_value;
+  p_outer->p_result = p_outer->error * p_outer->kp;
+
+  p_outer->error_sum += p_outer->error * DT_ALT;
+
+#define OUT_ALT_ERR_SUM_MAX 500
+  if(p_outer->error_sum > OUT_ALT_ERR_SUM_MAX)
+  {
+    p_outer->error_sum = OUT_ALT_ERR_SUM_MAX;
+  }
+  else if(p_outer->error_sum < -OUT_ALT_ERR_SUM_MAX)
+  {
+    p_outer->error_sum = -OUT_ALT_ERR_SUM_MAX;
+  }
+
+  p_outer->i_result = p_outer->error_sum * p_outer->ki;
+
+  p_outer->error_deriv = -climb_rate;
+
+#if !OUTER_DERIV_FILT_ENABLE
+  p_outer->d_result = p_outer->error_deriv * p_outer->kd;
+#else
+  p_outer->error_deriv_filt = p_outer->error_deriv_filt * 0.4f + p_outer->error_deriv * 0.6f;
+  p_outer->d_result = p_outer->error_deriv_filt * p_outer->kd;
+#endif
+
+  p_outer->pid_result = p_outer->p_result + p_outer->i_result + p_outer->d_result;
+  /*************************************************************************************/
+
+  /************ Double PID Inner (Climb Rate -> Throttle Adjustment) ******************/
+  p_inner->reference  = p_outer->pid_result;
+  p_inner->meas_value = climb_rate;
+
+  p_inner->error = p_inner->reference - p_inner->meas_value;
+  p_inner->p_result = p_inner->error * p_inner->kp;
+
+  p_inner->error_sum += p_inner->error * DT_ALT;
+
+#define IN_ALT_ERR_SUM_MAX 3000
+  if(p_inner->error_sum > IN_ALT_ERR_SUM_MAX)
+  {
+    p_inner->error_sum = IN_ALT_ERR_SUM_MAX;
+  }
+  else if(p_inner->error_sum < -IN_ALT_ERR_SUM_MAX)
+  {
+    p_inner->error_sum = -IN_ALT_ERR_SUM_MAX;
+  }
+
+  p_inner->i_result = p_inner->error_sum * p_inner->ki;
+
+  p_inner->error_deriv = -(p_inner->meas_value - p_inner->meas_value_prev) / DT_ALT;
+  p_inner->meas_value_prev = p_inner->meas_value;
+
+#if !INNER_DERIV_FILT_ENABLE
+  p_inner->d_result = p_inner->error_deriv * p_inner->kd;
+#else
+  p_inner->error_deriv_filt = p_inner->error_deriv_filt * 0.5f + p_inner->error_deriv * 0.5f;
+  p_inner->d_result = p_inner->error_deriv_filt * p_inner->kd;
+#endif
+
+  p_inner->pid_result = p_inner->p_result + p_inner->i_result + p_inner->d_result;
+  /*************************************************************************************/
+}
+void Single_ClimbRate_PID_Calculation(Single_PID_tbl* axis,
+                                      float set_point_climb_rate,
+                                      float climb_rate)
+{
+  axis->reference  = set_point_climb_rate;
+  axis->meas_value = climb_rate;
+
+  axis->error = axis->reference - axis->meas_value;
+  axis->p_result = axis->error * axis->kp;
+  axis->error_sum += axis->error * DT_ALT;
+
+#define CR_ERR_SUM_MAX 3000
+  if(axis->error_sum > CR_ERR_SUM_MAX)
+  {
+    axis->error_sum = CR_ERR_SUM_MAX;
+  }
+  else if(axis->error_sum < -CR_ERR_SUM_MAX)
+  {
+    axis->error_sum = -CR_ERR_SUM_MAX;
+  }
+
+  axis->i_result = axis->error_sum * axis->ki;
+
+  axis->error_deriv = -(axis->meas_value - axis->meas_value_prev) / DT_ALT;
+  axis->meas_value_prev = axis->meas_value;
+
+#if !INNER_DERIV_FILT_ENABLE
+  axis->d_result = axis->error_deriv * axis->kd;
+#else
+  axis->error_deriv_filt = axis->error_deriv_filt * 0.5f + axis->error_deriv * 0.5f;
+  axis->d_result = axis->error_deriv_filt * axis->kd;
+#endif
+
+  axis->pid_result = axis->p_result + axis->i_result + axis->d_result;
+}
+
+
 void Reset_PID_Integrator(Single_PID_tbl* axis)
 {
   axis->error_sum = 0;
 }
 
-void Reset_All_PID_Integrator(Double_PID_tbl* p_roll, Double_PID_tbl* p_pitch, Single_PID_tbl* p_yaw_heading, Single_PID_tbl* p_yaw_rate)
+void NORMAL_Reset_All_PID_Integrator(Double_PID_tbl* p_roll, Double_PID_tbl* p_pitch,
+                                     Single_PID_tbl* p_yaw_heading, Single_PID_tbl* p_yaw_rate)
 {
   Reset_PID_Integrator(&p_roll->inner);
   Reset_PID_Integrator(&p_roll->outer);
@@ -162,5 +275,19 @@ void Reset_All_PID_Integrator(Double_PID_tbl* p_roll, Double_PID_tbl* p_pitch, S
   Reset_PID_Integrator(&p_pitch->outer);
   Reset_PID_Integrator(p_yaw_heading);
   Reset_PID_Integrator(p_yaw_rate);
+}
+
+void ALT_Reset_ALL_PID_Integrator(Double_PID_tbl* p_roll, Double_PID_tbl* p_pitch,
+                                  Single_PID_tbl* p_yaw_heading, Single_PID_tbl* p_yaw_rate
+                                  ,Double_PID_tbl* p_alt)
+{
+  Reset_PID_Integrator(&p_roll->inner);
+   Reset_PID_Integrator(&p_roll->outer);
+   Reset_PID_Integrator(&p_pitch->inner);
+   Reset_PID_Integrator(&p_pitch->outer);
+   Reset_PID_Integrator(p_yaw_heading);
+   Reset_PID_Integrator(p_yaw_rate);
+   Reset_PID_Integrator(&p_alt->inner);
+   Reset_PID_Integrator(&p_alt->outer);
 }
 #endif

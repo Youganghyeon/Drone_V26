@@ -14,7 +14,7 @@
 static FSiA6B_tbl     IA6B;
 static DroneTm_tbl Drone_Tm;
 static bool isInit = false;
-
+static uint16_t toggleCount = 0;
 bool droneTmInit(void)
 {
   bool ret= false;
@@ -61,6 +61,18 @@ bool droneTmUpdate(void)
     Drone_Tm.is_Received =  false;
   }
   return Drone_Tm.is_Received;
+}
+
+static Switch_state prev;
+
+uint16_t droneToggleCount(uint8_t ch, Switch_state state)
+{
+  if(Drone_Tm.switch_ch[ch] != prev && Drone_Tm.switch_ch[ch] == state)
+  {
+    toggleCount ++;
+  }
+  prev= Drone_Tm.switch_ch[ch];
+  return toggleCount;
 }
 
 
